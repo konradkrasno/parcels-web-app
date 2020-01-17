@@ -50,4 +50,6 @@ urlpatterns = [
     path('favourite/<int:user_id>/remove_all', views.remove_all_favourite_from_fav,
          name='remove_all_favourite_from_fav'),
 
+    path('favourite/<int:user_id>/csv', views.streaming_csv_view, name='streaming_csv')
+
 ]

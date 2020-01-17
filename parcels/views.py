@@ -1,6 +1,6 @@
 from django.shortcuts import render, reverse, get_object_or_404
 
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -9,6 +9,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import View, TemplateView
 from .models import Advert, Favourite
 from .forms import AdvertForm, UserForm
+
+import csv
 
 # Create your views here.
 
@@ -426,3 +428,27 @@ def remove_all_favourite_from_fav(request, user_id):
                }
 
     return render(request, 'parcels/favourite_list.html', context=content)
+
+
+class Echo:
+    def write(self, value):
+        return value
+
+
+def streaming_csv_view(request, user_id):
+    favourite = Favourite()
+    fav_id = favourite.get_fav_id(user_id=user_id)
+    favourite_list = Advert.objects.filter(pk__in=fav_id).order_by('place')
+
+    rows = [['Miejscowość', 'Powiat', 'Cena', 'Cena za m2', 'Powierzchnia', 'Link', 'Data dodania']]
+    for adv in favourite_list:
+        row = [adv.place, adv.county, adv.price, adv.price_per_m2, adv.area, adv.link, adv.date_added]
+        rows.append(row)
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows),
+                                     content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="your_adverts.csv"'
+
+    return response
