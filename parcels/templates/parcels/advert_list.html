@@ -1,0 +1,53 @@
+{% extends "parcels/base.html" %}
+{% block content %}
+
+<div>
+	
+	{% if user.is_authenticated %}
+		{% if all_fav_added %}
+			<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite' place=place price=price area=area user_id=user.id %}">
+			    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
+			</a>
+		{% else %}
+			<a class="btn btn-default" href="{% url 'parcels:make_all_favourite' place=place price=price area=area user_id=user.id %}">
+			    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj wszystkie do ulubionych
+			</a>
+		{% endif %}
+	{% endif %}
+
+	{% if filtered_adverts %}
+		<h2>Wyniki wyszukiwania: </h2>
+
+		{% for advert in filtered_adverts %}
+		<div class="post">
+			{% if user.is_authenticated %}
+				<h2><a href="{% url 'parcels:advert_detail_when_login' place=place price=price area=area pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
+			{% else %}
+				<h2><a href="{% url 'parcels:advert_detail_when_logout' place=place price=price area=area pk=advert.pk %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>		
+			{% endif %}
+				<h3>{{ advert.price }} PLN</h3>
+				<h3>{{ advert.price_per_m2 }} PLN/m2</h3>
+
+				<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
+			{% if user.is_authenticated %}
+				{% if advert.id in fav_id %}
+					<a class="btn btn-default" href="{% url 'parcels:remove_favourite_list' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+					    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
+					</a>
+				{% else %}
+					<a class="btn btn-default" href="{% url 'parcels:make_favourite_list' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+					    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
+					</a>
+				{% endif %}
+			{% endif %}
+
+		</div>
+		{% endfor %}
+
+	{% else %}
+		<h2>Brak wyników wyszukiwania, spróbuj jeszcze raz.</h2>
+	{% endif %}
+
+</div>
+
+{% endblock %}
