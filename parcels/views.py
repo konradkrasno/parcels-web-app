@@ -1,6 +1,6 @@
 from django.shortcuts import render, reverse, get_object_or_404
 
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -8,7 +8,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.generic import View, TemplateView
 from .models import Advert, Favourite
-from .forms import AdvertForm, UserForm
+from .forms import AdvertForm, UserCreationForm
+
+import csv
 
 # Create your views here.
 
@@ -19,7 +21,7 @@ class Index(TemplateView):
     # model.download_adverts_from_json()
 
 
-class SearchAdvertLoginView(LoginRequiredMixin, View):
+class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_form.html'
     form_class = AdvertForm
 
@@ -49,7 +51,7 @@ class SearchAdvertLoginView(LoginRequiredMixin, View):
         return render(request, 'parcels/advert_form.html', {'form': form})
 
 
-class SearchAdvertLogoutView(View):
+class SearchAdvertWhenLogoutView(View):
     template_name = 'parcels/advert_form.html'
     form_class = AdvertForm
 
@@ -75,7 +77,7 @@ class SearchAdvertLogoutView(View):
         return render(request, 'parcels/advert_form.html', {'form': form})
 
 
-class AdvertListLoginView(LoginRequiredMixin, View):
+class AdvertListWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_list.html'
 
     @classmethod
@@ -102,7 +104,7 @@ class AdvertListLoginView(LoginRequiredMixin, View):
         return render(request, 'parcels/advert_list.html', context=content)
 
 
-class AdvertListLogoutView(View):
+class AdvertListWhenLogoutView(View):
     template_name = 'parcels/advert_list.html'
 
     @classmethod
@@ -118,7 +120,7 @@ class AdvertListLogoutView(View):
         return render(request, 'parcels/advert_list.html', context=content)
 
 
-class AdvertDetailLoginView(LoginRequiredMixin, View):
+class AdvertDetailWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_detail.html'
 
     @classmethod
@@ -137,7 +139,7 @@ class AdvertDetailLoginView(LoginRequiredMixin, View):
                                                               })
 
 
-class AdvertDetailLogoutView(View):
+class AdvertDetailWhenLogoutView(View):
     template_name = 'parcels/advert_detail.html'
 
     @classmethod
@@ -189,16 +191,13 @@ def register(request):
     registered = False
 
     if request.method == 'POST':
-        user_form = UserForm(data=request.POST)
+        user_form = UserCreationForm(data=request.POST)
         if user_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-
+            user_form.save()
             registered = True
 
     else:
-        user_form = UserForm()
+        user_form = UserCreationForm()
 
     return render(request, 'registration/registration.html', {'user_form': user_form,
                                                               'registered': registered
@@ -426,3 +425,27 @@ def remove_all_favourite_from_fav(request, user_id):
                }
 
     return render(request, 'parcels/favourite_list.html', context=content)
+
+
+class Echo:
+    def write(self, value):
+        return value
+
+
+def streaming_csv_view(request, user_id):
+    favourite = Favourite()
+    fav_id = favourite.get_fav_id(user_id=user_id)
+    favourite_list = Advert.objects.filter(pk__in=fav_id).order_by('place')
+
+    rows = [['Miejscowość', 'Powiat', 'Cena', 'Cena za m2', 'Powierzchnia', 'Link', 'Data dodania']]
+    for adv in favourite_list:
+        row = [adv.place, adv.county, adv.price, adv.price_per_m2, adv.area, adv.link, adv.date_added]
+        rows.append(row)
+
+    pseudo_buffer = Echo()
+    writer = csv.writer(pseudo_buffer)
+    response = StreamingHttpResponse((writer.writerow(row) for row in rows),
+                                     content_type="text/csv")
+    response['Content-Disposition'] = 'attachment; filename="your_adverts.csv"'
+
+    return response

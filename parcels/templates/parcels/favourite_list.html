@@ -7,10 +7,8 @@
 	<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite_from_fav' user_id=user.id %}">
 	    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
 	</a>
-{% endif %}
+	<a class="btn btn-default" href="{% url 'parcels:streaming_csv' user_id=user.id %}">Pobierz jako plik csv</a>
 
-
-{% if favourite_list %}
 	<h2>Zapisane ogłoszenia: </h2>
 
 	{% for advert in favourite_list %}
