@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.generic import View, TemplateView
 from .models import Advert, Favourite
-from .forms import AdvertForm, UserForm
+from .forms import AdvertForm, UserCreationForm
 
 import csv
 
@@ -21,7 +21,7 @@ class Index(TemplateView):
     # model.download_adverts_from_json()
 
 
-class SearchAdvertLoginView(LoginRequiredMixin, View):
+class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_form.html'
     form_class = AdvertForm
 
@@ -51,7 +51,7 @@ class SearchAdvertLoginView(LoginRequiredMixin, View):
         return render(request, 'parcels/advert_form.html', {'form': form})
 
 
-class SearchAdvertLogoutView(View):
+class SearchAdvertWhenLogoutView(View):
     template_name = 'parcels/advert_form.html'
     form_class = AdvertForm
 
@@ -77,7 +77,7 @@ class SearchAdvertLogoutView(View):
         return render(request, 'parcels/advert_form.html', {'form': form})
 
 
-class AdvertListLoginView(LoginRequiredMixin, View):
+class AdvertListWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_list.html'
 
     @classmethod
@@ -104,7 +104,7 @@ class AdvertListLoginView(LoginRequiredMixin, View):
         return render(request, 'parcels/advert_list.html', context=content)
 
 
-class AdvertListLogoutView(View):
+class AdvertListWhenLogoutView(View):
     template_name = 'parcels/advert_list.html'
 
     @classmethod
@@ -120,7 +120,7 @@ class AdvertListLogoutView(View):
         return render(request, 'parcels/advert_list.html', context=content)
 
 
-class AdvertDetailLoginView(LoginRequiredMixin, View):
+class AdvertDetailWhenLoginView(LoginRequiredMixin, View):
     template_name = 'parcels/advert_detail.html'
 
     @classmethod
@@ -139,7 +139,7 @@ class AdvertDetailLoginView(LoginRequiredMixin, View):
                                                               })
 
 
-class AdvertDetailLogoutView(View):
+class AdvertDetailWhenLogoutView(View):
     template_name = 'parcels/advert_detail.html'
 
     @classmethod
@@ -191,16 +191,13 @@ def register(request):
     registered = False
 
     if request.method == 'POST':
-        user_form = UserForm(data=request.POST)
+        user_form = UserCreationForm(data=request.POST)
         if user_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-
+            user_form.save()
             registered = True
 
     else:
-        user_form = UserForm()
+        user_form = UserCreationForm()
 
     return render(request, 'registration/registration.html', {'user_form': user_form,
                                                               'registered': registered
