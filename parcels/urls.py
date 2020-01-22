@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.Index.as_view(), name='index'),
 
     path('register', views.register, name='register'),
+    path('activate/<uidb64>/<token>', views.activate, name='activate'),
 
     path('user_login', views.user_login, name='login'),
     path('user_logout', views.user_logout, name='logout'),
@@ -51,5 +52,6 @@ urlpatterns = [
          name='remove_all_favourite_from_fav'),
 
     path('favourite/<int:user_id>/csv', views.streaming_csv_view, name='streaming_csv'),
+    path('favourite/<int:user_id>/sending_csv', views.sending_csv_view, name='sending_csv'),
 
 ]

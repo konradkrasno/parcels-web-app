@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import json
+
+with open("secure.json", "r") as file:
+    secure = json.load(file)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -132,3 +136,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 LOGIN_URL = '/user_login'
 LOGIN_REDIRECT_URL = '/'
+
+EMAIL_USE_SSL = True
+EMAIL_HOST = secure['EMAIL_HOST']
+EMAIL_HOST_USER = secure['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = secure['EMAIL_HOST_PASSWORD']
+EMAIL_PORT = secure['EMAIL_PORT']
+DEFAULT_FROM_EMAIL = secure['EMAIL_HOST_USER']

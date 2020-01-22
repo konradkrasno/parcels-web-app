@@ -1,4 +1,7 @@
 from django.shortcuts import render, reverse, get_object_or_404
+from django.contrib.sites.shortcuts import get_current_site
+
+from django.template.loader import render_to_string
 
 from django.http import HttpResponseRedirect, HttpResponse, StreamingHttpResponse
 
@@ -8,9 +11,17 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.generic import View, TemplateView
 from .models import Advert, Favourite
-from .forms import AdvertForm, UserCreationForm
+from .forms import AdvertForm, SighUp
+
+from django.contrib.auth.models import User
+from django.core.mail import EmailMessage
+
+from django.utils.encoding import force_bytes, force_text
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from .tokens import account_activation_token
 
 import csv
+from io import StringIO
 
 # Create your views here.
 
@@ -188,20 +199,48 @@ class FavouriteDetailView(LoginRequiredMixin, View):
 
 
 def register(request):
-    registered = False
-
     if request.method == 'POST':
-        user_form = UserCreationForm(data=request.POST)
+        user_form = SighUp(data=request.POST)
         if user_form.is_valid():
-            user_form.save()
-            registered = True
+            user = user_form.save(commit=False)
+            user.is_active = False
+            user.email = user_form.clean_email2()
+            user.save()
+
+            current_site = get_current_site(request)
+            mail_subject = 'Aktywacja konta w aplikacji ParcelsScraper'
+            message = render_to_string('registration/active_mail.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': account_activation_token.make_token(user),
+            })
+            to_email = user_form.cleaned_data.get('email1')
+            email = EmailMessage(
+                mail_subject, message, to=[to_email]
+            )
+            email.send()
+            return HttpResponse('Potwierź adres email, aby dokończyć rejestrację.')
 
     else:
-        user_form = UserCreationForm()
+        user_form = SighUp()
 
     return render(request, 'registration/registration.html', {'user_form': user_form,
-                                                              'registered': registered
                                                               })
+
+
+def activate(request, uidb64, token):
+    try:
+        uid = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError):
+        user = None
+    if user is not None and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+
+        return HttpResponseRedirect(reverse('parcels:login'))
+    return HttpResponse('Link aktywacyjny jest nieważny.')
 
 
 def user_login(request):
@@ -449,3 +488,36 @@ def streaming_csv_view(request, user_id):
     response['Content-Disposition'] = 'attachment; filename="your_adverts.csv"'
 
     return response
+
+
+def sending_csv_view(request, user_id):
+    favourite = Favourite()
+    fav_id = favourite.get_fav_id(user_id=user_id)
+    favourite_list = Advert.objects.filter(pk__in=fav_id).order_by('place')
+
+    rows = [['Miejscowość', 'Powiat', 'Cena', 'Cena za m2', 'Powierzchnia', 'Link', 'Data dodania']]
+    for adv in favourite_list:
+        row = [adv.place, adv.county, adv.price, adv.price_per_m2, adv.area, adv.link, adv.date_added]
+        rows.append(row)
+
+    csv_file = StringIO()
+    writer = csv.writer(csv_file)
+    [writer.writerow(row) for row in rows]
+
+    user = User.objects.get(pk=user_id)
+    to_email = user.email
+
+    email = EmailMessage(
+        'ParcelsScraper - wybrane działki',
+        'W załączeniu przesyłamy wybrane przez Ciebie działki.',
+        to=[to_email],
+    )
+    email.attach('your_adverts.csv', csv_file.getvalue(), "text/csv")
+    email.send()
+
+    content = {'user_id': user_id,
+               'favourite_list': favourite_list,
+               'fav_id': fav_id,
+               }
+
+    return render(request, 'parcels/favourite_list.html', context=content)

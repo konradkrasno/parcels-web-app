@@ -8,6 +8,7 @@
 	    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
 	</a>
 	<a class="btn btn-default" href="{% url 'parcels:streaming_csv' user_id=user.id %}">Pobierz jako plik csv</a>
+	<a class="btn btn-default" href="{% url 'parcels:sending_csv' user_id=user.id %}">Wyślij email z plikiem csv</a>
 
 	<h2>Zapisane ogłoszenia: </h2>
 
