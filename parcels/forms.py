@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import Advert
 
 from django.contrib.auth.forms import UserCreationForm
@@ -24,7 +24,7 @@ class SighUp(UserCreationForm):
     email2 = forms.EmailField(label='Potwierdź email', widget=forms.EmailInput)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ('username',)
 
     def clean_email2(self):

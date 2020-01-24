@@ -38,13 +38,11 @@ urlpatterns = [
          name='remove_all_favourite'),
 
     path('favourites/<int:user_id>', views.FavouriteListView.as_view(), name='favourite_list'),
-    path('favourites/<int:pk>/<int:user_id>', views.FavouriteDetailView.as_view(), name='fav_advert_detail'),
+    path('favourites/<int:pk>/<int:user_id>', views.FavouriteDetailView.as_view(), name='favourite_detail'),
 
     path('favourites/<int:pk>/<int:user_id>/add', views.make_favourite_from_fav, name='make_favourite_from_fav'),
     path('favourites/<int:pk>/<int:user_id>/remove', views.remove_favourite_from_fav, name='remove_favourite_from_fav'),
 
-    path('favourite/<int:pk>/<int:user_id>/list/add', views.make_favourite_from_fav_list,
-         name='make_favourite_from_fav_list'),
     path('favourite/<int:pk>/<int:user_id>/list/remove', views.remove_favourite_from_fav_list,
          name='remove_favourite_from_fav_list'),
 

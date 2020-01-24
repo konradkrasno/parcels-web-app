@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 import json
@@ -69,7 +68,7 @@ class Favourite(models.Model):
     @classmethod
     def get_fav_id(cls, user_id):
         try:
-            favourite = get_object_or_404(Favourite, user_id=user_id)
+            favourite = Favourite.objects.get(user_id=user_id)
             return [int(s) for s in str(favourite.favourite).split(',')]
         except:
             return []
@@ -77,7 +76,7 @@ class Favourite(models.Model):
     @classmethod
     def make_favourite(cls, pk, user_id):
         try:
-            favourite = get_object_or_404(Favourite, user_id=user_id)
+            favourite = Favourite.objects.get(user_id=user_id)
             favourite.add_to_favourite(pk=pk)
             favourite.save()
         except:
@@ -92,11 +91,11 @@ class Favourite(models.Model):
             pk = advert.pk
             if i == 0:
                 try:
-                    favourite = get_object_or_404(Favourite, user_id=user_id)
+                    favourite = Favourite.objects.get(user_id=user_id)
                     favourite.add_to_favourite(pk=pk)
                 except:
                     favourite.add_to_favourite_first_time(pk=pk, user_id=user_id)
-                    favourite = get_object_or_404(Favourite, user_id=user_id)
+                    favourite = Favourite.objects.get(user_id=user_id)
             else:
                 favourite.add_to_favourite(pk=pk)
         favourite.save()
@@ -104,7 +103,7 @@ class Favourite(models.Model):
     @classmethod
     def remove_favourite(cls, pk, user_id):
         try:
-            favourite = get_object_or_404(Favourite, user_id=user_id)
+            favourite = Favourite.objects.get(user_id=user_id)
             favourite.delete_from_favourite(pk=pk)
             favourite.save()
         except:
@@ -113,7 +112,7 @@ class Favourite(models.Model):
     @classmethod
     def remove_many_favourite(cls, user_id, adverts):
         try:
-            favourite = get_object_or_404(Favourite, user_id=user_id)
+            favourite = Favourite.objects.get(user_id=user_id)
             for advert in adverts:
                 pk = advert.pk
                 favourite.delete_from_favourite(pk=pk)
@@ -124,7 +123,7 @@ class Favourite(models.Model):
     @classmethod
     def remove_many_favourite_from_fav(cls, user_id, pk_list):
         try:
-            favourite = get_object_or_404(Favourite, user_id=user_id)
+            favourite = Favourite.objects.get(user_id=user_id)
             for pk in pk_list:
                 favourite.delete_from_favourite(pk=pk)
             favourite.save()
