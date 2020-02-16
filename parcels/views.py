@@ -1,4 +1,4 @@
-from django.shortcuts import render, reverse, get_object_or_404
+from django.shortcuts import render, reverse
 from django.contrib.sites.shortcuts import get_current_site
 
 from django.template.loader import render_to_string
@@ -25,11 +25,11 @@ from io import StringIO
 
 # Create your views here.
 
+Advert.download_adverts_from_json_and_delete_duplicates()
+
 
 class Index(TemplateView):
     template_name = 'parcels/index.html'
-
-    # model.download_adverts_from_json()
 
 
 class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
@@ -41,9 +41,6 @@ class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
         return render(request, 'parcels/advert_form.html', {'form': form})
 
     def post(self, request, user_id):
-        # favourite = Favourite()
-        # fav_id = favourite.get_fav_id(user_id=user_id)
-
         form = self.form_class(request.POST)
 
         if form.is_valid():

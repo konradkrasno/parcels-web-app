@@ -7,21 +7,21 @@ import re
 
 
 class Advert(models.Model):
-    store_id = models.PositiveIntegerField()
-    place = models.CharField(max_length=250)
-    county = models.CharField(max_length=250)
-    price = models.FloatField()
-    price_per_m2 = models.FloatField(default=0)
-    area = models.FloatField()
-    link = models.CharField(max_length=2000)
-    date_added = models.CharField(max_length=50)
-    description = models.TextField()
+    store_id = models.PositiveIntegerField(null=True)
+    place = models.CharField(max_length=250, null=True)
+    county = models.CharField(max_length=250, null=True)
+    price = models.FloatField(null=True)
+    price_per_m2 = models.FloatField(default=0, null=True)
+    area = models.FloatField(null=True)
+    link = models.CharField(max_length=2000, null=True)
+    date_added = models.CharField(max_length=50, null=True)
+    description = models.TextField(null=True)
 
     def __str__(self):
         return '{}, price: {} PLN, area: {} PLN/m2'.format(self.place, self.price, self.area)
 
     @classmethod
-    def download_adverts_from_json(cls):
+    def download_adverts_from_json_and_delete_duplicates(cls):
         with open("adverts.json", "r") as file1:
             adv = json.load(file1)
 
@@ -29,16 +29,27 @@ class Advert(models.Model):
             advert = cls(**item)
             advert.save()
 
-            # Deleting duplicates
-            # sq = Advert.object.query(cls.id).group_by(cls.place, cls.price, cls.price_per_m2, cls.area).distinct()
-            # query = Advert.__table__.delete().where(cls.id.notin_(sq))
+        # Deleting duplicates
+        min_id_objects = cls.objects.values("place", "price", "price_per_m2", "area").annotate(minid=models.Min('id'))
+        min_ids = [obj['minid'] for obj in min_id_objects]
+
+        all_ids = [obj["id"] for obj in cls.objects.values()]
+
+        ids_to_remove = [_id for _id in all_ids if _id not in min_ids]
+
+        while ids_to_remove:
+            part_of_ids_to_remove = ids_to_remove[:500]
+            ids_to_remove = ids_to_remove[500:]
+            cls.objects.filter(id__in=part_of_ids_to_remove).delete()
+
+        print("Amount of adverts after deleting duplicates: ", len(cls.objects.all()))
 
     @classmethod
     def filter_adverts(cls, price, place, area):
-        return Advert.objects.filter(place=place,
-                                     price__lte=price,
-                                     area__gte=area,
-                                     ).order_by('price')
+        return cls.objects.filter(place=place,
+                                  price__lte=price,
+                                  area__gte=area,
+                                  ).order_by('price')
 
 
 class Favourite(models.Model):
