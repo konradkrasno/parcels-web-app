@@ -21,13 +21,16 @@ class Advert(models.Model):
         return '{}, price: {} PLN, area: {} PLN/m2'.format(self.place, self.price, self.area)
 
     @classmethod
-    def download_adverts_from_json_and_delete_duplicates(cls):
+    def download_adverts_from_json(cls):
         with open("adverts.json", "r") as file1:
             adv = json.load(file1)
 
         for item in adv:
             advert = cls(**item)
             advert.save()
+
+    @classmethod
+    def delete_duplicates(cls):
 
         # Deleting duplicates
         min_id_objects = cls.objects.values("place", "price", "price_per_m2", "area").annotate(minid=models.Min('id'))

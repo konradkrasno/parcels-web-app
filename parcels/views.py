@@ -25,7 +25,8 @@ from io import StringIO
 
 # Create your views here.
 
-Advert.download_adverts_from_json_and_delete_duplicates()
+Advert.download_adverts_from_json()
+Advert.delete_duplicates()
 
 
 class Index(TemplateView):
