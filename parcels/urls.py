@@ -8,6 +8,7 @@ urlpatterns = [
     path('', views.Index.as_view(), name='index'),
 
     path('register', views.register, name='register'),
+    path('activate/<uidb64>/<token>', views.activate, name='activate'),
 
     path('user_login', views.user_login, name='login'),
     path('user_logout', views.user_logout, name='logout'),
@@ -37,13 +38,11 @@ urlpatterns = [
          name='remove_all_favourite'),
 
     path('favourites/<int:user_id>', views.FavouriteListView.as_view(), name='favourite_list'),
-    path('favourites/<int:pk>/<int:user_id>', views.FavouriteDetailView.as_view(), name='fav_advert_detail'),
+    path('favourites/<int:pk>/<int:user_id>', views.FavouriteDetailView.as_view(), name='favourite_detail'),
 
     path('favourites/<int:pk>/<int:user_id>/add', views.make_favourite_from_fav, name='make_favourite_from_fav'),
     path('favourites/<int:pk>/<int:user_id>/remove', views.remove_favourite_from_fav, name='remove_favourite_from_fav'),
 
-    path('favourite/<int:pk>/<int:user_id>/list/add', views.make_favourite_from_fav_list,
-         name='make_favourite_from_fav_list'),
     path('favourite/<int:pk>/<int:user_id>/list/remove', views.remove_favourite_from_fav_list,
          name='remove_favourite_from_fav_list'),
 
@@ -51,5 +50,6 @@ urlpatterns = [
          name='remove_all_favourite_from_fav'),
 
     path('favourite/<int:user_id>/csv', views.streaming_csv_view, name='streaming_csv'),
+    path('favourite/<int:user_id>/sending_csv', views.sending_csv_view, name='sending_csv'),
 
 ]

@@ -3,7 +3,7 @@
 
 <div>
 
-	{% if registered %}
+	{% if user.is_active %}
 
 	<h2>Dziękujemy za rejestrację!</h2>
 	<a href="{% url 'parcels:login' %}">Zaloguj</a>
