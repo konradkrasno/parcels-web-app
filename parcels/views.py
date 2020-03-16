@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.views.generic import View, TemplateView, ListView, DetailView
 from .models import Advert, Favourite
-from .forms import AdvertForm, SighUp
+from .forms import AdvertForm, SignUp
 
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
@@ -25,7 +25,8 @@ from io import StringIO
 
 # Create your views here.
 
-Advert.download_adverts_from_json_and_delete_duplicates()
+# Advert.download_adverts_from_json()
+# Advert.delete_duplicates()
 
 
 class Index(TemplateView):
@@ -101,6 +102,10 @@ class AdvertListWhenLoginView(LoginRequiredMixin, ListView):
                                ).order_by('price')
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object_list', None)
+        if queryset is None:
+            self.object_list = self.get_queryset()
+
         favourite = Favourite()
         fav_id = favourite.get_fav_id(user_id=self.kwargs.get('user_id'))
 
@@ -124,6 +129,10 @@ class AdvertListWhenLogoutView(ListView):
                                ).order_by('price')
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object_list', None)
+        if queryset is None:
+            self.object_list = self.get_queryset()
+
         context = super().get_context_data(**kwargs)
         context['place'] = self.kwargs.get('place')
         context['price'] = self.kwargs.get('price')
@@ -140,6 +149,10 @@ class AdvertDetailWhenLoginView(LoginRequiredMixin, DetailView):
         return queryset.filter(pk=self.kwargs.get('pk'))
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object', None)
+        if queryset is None:
+            self.object = self.get_queryset()
+
         favourite = Favourite()
         fav_id = favourite.get_fav_id(user_id=self.kwargs.get('user_id'))
 
@@ -160,6 +173,10 @@ class AdvertDetailWhenLogoutView(DetailView):
         return queryset.filter(pk=self.kwargs.get('pk'))
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object', None)
+        if queryset is None:
+            self.object = self.get_queryset()
+
         context = super().get_context_data(**kwargs)
         context['place'] = self.kwargs.get('place')
         context['price'] = self.kwargs.get('price')
@@ -177,6 +194,10 @@ class FavouriteListView(LoginRequiredMixin, ListView):
         return queryset.filter(pk__in=fav_id).order_by('place')
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object_list', None)
+        if queryset is None:
+            self.object_list = self.get_queryset()
+
         favourite = Favourite()
         fav_id = favourite.get_fav_id(user_id=self.kwargs.get('user_id'))
 
@@ -194,6 +215,10 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
         return queryset.filter(pk=self.kwargs.get('pk'))
 
     def get_context_data(self, **kwargs):
+        queryset = kwargs.pop('object', None)
+        if queryset is None:
+            self.object = self.get_queryset()
+
         favourite = Favourite()
         fav_id = favourite.get_fav_id(user_id=self.kwargs.get('user_id'))
 
@@ -204,7 +229,7 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
 
 def register(request):
     if request.method == 'POST':
-        user_form = SighUp(data=request.POST)
+        user_form = SignUp(data=request.POST)
         if user_form.is_valid():
             user = user_form.save(commit=False)
             user.is_active = False
@@ -227,7 +252,7 @@ def register(request):
             return HttpResponse('Potwierź adres email, aby dokończyć rejestrację.')
 
     else:
-        user_form = SighUp()
+        user_form = SignUp()
 
     return render(request, 'registration/registration.html', {'user_form': user_form,
                                                               })

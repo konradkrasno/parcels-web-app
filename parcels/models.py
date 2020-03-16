@@ -21,13 +21,16 @@ class Advert(models.Model):
         return '{}, price: {} PLN, area: {} PLN/m2'.format(self.place, self.price, self.area)
 
     @classmethod
-    def download_adverts_from_json_and_delete_duplicates(cls):
+    def download_adverts_from_json(cls):
         with open("adverts.json", "r") as file1:
             adv = json.load(file1)
 
         for item in adv:
             advert = cls(**item)
             advert.save()
+
+    @classmethod
+    def delete_duplicates(cls):
 
         # Deleting duplicates
         min_id_objects = cls.objects.values("place", "price", "price_per_m2", "area").annotate(minid=models.Min('id'))
@@ -61,7 +64,7 @@ class Favourite(models.Model):
 
     def add_to_favourite_first_time(self, pk, user_id):
         self.user_id = user_id
-        self.favourite = pk
+        self.favourite = '{}'.format(pk)
         self.save()
 
     def add_to_favourite(self, pk):
@@ -81,7 +84,7 @@ class Favourite(models.Model):
         try:
             favourite = Favourite.objects.get(user_id=user_id)
             return [int(s) for s in str(favourite.favourite).split(',')]
-        except:
+        except Favourite.DoesNotExist:
             return []
 
     @classmethod
@@ -90,7 +93,7 @@ class Favourite(models.Model):
             favourite = Favourite.objects.get(user_id=user_id)
             favourite.add_to_favourite(pk=pk)
             favourite.save()
-        except:
+        except Favourite.DoesNotExist:
             favourite = Favourite()
             favourite.add_to_favourite_first_time(pk=pk, user_id=user_id)
 
@@ -104,7 +107,7 @@ class Favourite(models.Model):
                 try:
                     favourite = Favourite.objects.get(user_id=user_id)
                     favourite.add_to_favourite(pk=pk)
-                except:
+                except Favourite.DoesNotExist:
                     favourite.add_to_favourite_first_time(pk=pk, user_id=user_id)
                     favourite = Favourite.objects.get(user_id=user_id)
             else:
@@ -117,7 +120,7 @@ class Favourite(models.Model):
             favourite = Favourite.objects.get(user_id=user_id)
             favourite.delete_from_favourite(pk=pk)
             favourite.save()
-        except:
+        except Favourite.DoesNotExist:
             pass
 
     @classmethod
@@ -128,7 +131,7 @@ class Favourite(models.Model):
                 pk = advert.pk
                 favourite.delete_from_favourite(pk=pk)
             favourite.save()
-        except:
+        except Favourite.DoesNotExist:
             pass
 
     @classmethod
@@ -138,5 +141,5 @@ class Favourite(models.Model):
             for pk in pk_list:
                 favourite.delete_from_favourite(pk=pk)
             favourite.save()
-        except:
+        except Favourite.DoesNotExist:
             pass
