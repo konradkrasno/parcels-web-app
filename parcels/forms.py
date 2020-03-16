@@ -15,7 +15,7 @@ class AdvertForm(forms.ModelForm):
         fields = ('place', 'price', 'area')
 
 
-class SighUp(UserCreationForm):
+class SignUp(UserCreationForm):
     username = forms.CharField(max_length=150, label='Nazwa użytkownika')
     password1 = forms.CharField(label='Hasło', widget=forms.PasswordInput)
     password2 = forms.CharField(label='Potwierdź hasło', widget=forms.PasswordInput)
