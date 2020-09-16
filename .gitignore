@@ -7,3 +7,4 @@ secure.json
 .idea/
 __pycache__/*
 venv/*
+images/*
