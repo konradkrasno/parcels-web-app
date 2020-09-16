@@ -23,10 +23,9 @@ from .tokens import account_activation_token
 import csv
 from io import StringIO
 
-# Create your views here.
+import upload_db
 
-# Advert.download_adverts_from_json()
-# Advert.delete_duplicates()
+# Create your views here.
 
 
 class Index(TemplateView):

@@ -4,4 +4,7 @@ db.sqlite3
 */*/__pycache__
 parcels/migrations
 secure.json
+.idea/
+__pycache__/*
+venv/*
 images/*
