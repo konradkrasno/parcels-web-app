@@ -29,26 +29,26 @@ Data is uploading to database from json file. Json file should be named adverts.
 parcels-web-app/adverts.json
 [
 	{
-		"store_id": 1,
-		"place": "example_place",
-		"county": "example_county",
-		"price": "200000",
-		"price_per_m2": "200",
-		"area": "1000",
-		"link": "example_link",
-		"date_added": "14/09/2020",
-		"description": "example_description"
+	"store_id": 1,
+	"place": "example_place",
+	"county": "example_county",
+	"price": "200000",
+	"price_per_m2": "200",
+	"area": "1000",
+	"link": "example_link",
+	"date_added": "14/09/2020",
+	"description": "example_description"
 	},
 	{
-		"store_id": 1,
-		"place": "example_place",
-		"county": "example_county",
-		"price": "400000",
-		"price_per_m2": "400",
-		"area": "1000",
-		"link": "example_link",
-		"date_added": "14/09/2020",
-		"description": "example_description"
+	"store_id": 1,
+	"place": "example_place",
+	"county": "example_county",
+	"price": "400000",
+	"price_per_m2": "400",
+	"area": "1000",
+	"link": "example_link",
+	"date_added": "14/09/2020",
+	"description": "example_description"
 	}
 ]
 
