@@ -1,7 +1,0 @@
-{% autoescape off %}
-Cześć {{ user.username }},
-Prosimy kliknąć na poniższy link, aby dokończyć rejestrację:
-
-http://{{ domain }}{% url 'parcels:activate' uidb64=uid token=token %}
-
-{% endautoescape %}
