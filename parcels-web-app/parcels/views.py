@@ -56,7 +56,7 @@ class Index(TemplateView):
     template_name = "parcels/index.html"
 
 
-class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
+class SearchAdvertsView(View):
     template_name = "parcels/advert_form.html"
     form_class = AdvertForm
 
@@ -68,86 +68,17 @@ class SearchAdvertWhenLoginView(LoginRequiredMixin, View):
         form = self.form_class(request.POST)
 
         if form.is_valid():
-            place = form.cleaned_data["place"]
-            price = form.cleaned_data["price"]
-            area = form.cleaned_data["area"]
+            context = form.cleaned_data
+            context["user_id"] = user_id
 
-            context = {
-                "place": place,
-                "price": price,
-                "area": area,
-                "user_id": user_id,
-            }
-
-            return HttpResponseRedirect(
-                reverse("parcels:advert_list_when_login", kwargs=context)
-            )
+            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
 
         else:
             form = AdvertForm()
         return render(request, "parcels/advert_form.html", {"form": form})
 
 
-class SearchAdvertWhenLogoutView(View):
-    template_name = "parcels/advert_form.html"
-    form_class = AdvertForm
-
-    def get(self, request):
-        form = self.form_class()
-        return render(request, "parcels/advert_form.html", {"form": form})
-
-    def post(self, request):
-        form = self.form_class(request.POST)
-
-        if form.is_valid():
-            place = form.cleaned_data["place"]
-            price = form.cleaned_data["price"]
-            area = form.cleaned_data["area"]
-
-            context = {
-                "place": place,
-                "price": price,
-                "area": area,
-            }
-
-            return HttpResponseRedirect(
-                reverse("parcels:advert_list_when_logout", kwargs=context)
-            )
-
-        else:
-            form = AdvertForm()
-        return render(request, "parcels/advert_form.html", {"form": form})
-
-
-class AdvertListWhenLoginView(LoginRequiredMixin, ListView):
-    template_name = "parcels/advert_list.html"
-    model = Advert
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset.filter(
-            place=self.kwargs.get("place"),
-            price__lte=self.kwargs.get("price"),
-            area__gte=self.kwargs.get("area"),
-        ).order_by("price")
-
-    def get_context_data(self, **kwargs):
-        queryset = kwargs.pop("object_list", None)
-        if queryset is None:
-            self.object_list = self.get_queryset()
-
-        favourite = Favourite()
-        fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
-
-        context = super().get_context_data(**kwargs)
-        context["fav_id"] = fav_id
-        context["place"] = self.kwargs.get("place")
-        context["price"] = self.kwargs.get("price")
-        context["area"] = self.kwargs.get("area")
-        return context
-
-
-class AdvertListWhenLogoutView(ListView):
+class AdvertListView(ListView):
     template_name = "parcels/advert_list.html"
     model = Advert
 
@@ -168,34 +99,16 @@ class AdvertListWhenLogoutView(ListView):
         context["place"] = self.kwargs.get("place")
         context["price"] = self.kwargs.get("price")
         context["area"] = self.kwargs.get("area")
+
+        if self.kwargs.get("user_id"):
+            favourite = Favourite()
+            fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+            context["fav_id"] = fav_id
+
         return context
 
 
-class AdvertDetailWhenLoginView(LoginRequiredMixin, DetailView):
-    template_name = "parcels/advert_detail.html"
-    model = Advert
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        return queryset.filter(pk=self.kwargs.get("pk"))
-
-    def get_context_data(self, **kwargs):
-        queryset = kwargs.pop("object", None)
-        if queryset is None:
-            self.object = self.get_queryset()
-
-        favourite = Favourite()
-        fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
-
-        context = super().get_context_data(**kwargs)
-        context["fav_id"] = fav_id
-        context["place"] = self.kwargs.get("place")
-        context["price"] = self.kwargs.get("price")
-        context["area"] = self.kwargs.get("area")
-        return context
-
-
-class AdvertDetailWhenLogoutView(DetailView):
+class AdvertDetailView(DetailView):
     template_name = "parcels/advert_detail.html"
     model = Advert
 
@@ -212,6 +125,12 @@ class AdvertDetailWhenLogoutView(DetailView):
         context["place"] = self.kwargs.get("place")
         context["price"] = self.kwargs.get("price")
         context["area"] = self.kwargs.get("area")
+
+        if self.kwargs.get("user_id"):
+            favourite = Favourite()
+            fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+            context["fav_id"] = fav_id
+
         return context
 
 
@@ -331,163 +250,109 @@ def user_logout(request):
 
 
 @login_required
-def make_favourite(request, place, price, area, pk, user_id):
+def make_favourite(request, **kwargs):
     favourite = Favourite()
-    favourite.make_favourite(pk=pk, user_id=user_id)
+    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "pk": pk,
-        "user_id": user_id,
-    }
+    return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
 
-    return HttpResponseRedirect(
-        reverse("parcels:advert_detail_when_login", kwargs=context)
+
+@login_required
+def make_favourite_list(request, **kwargs):
+    favourite = Favourite()
+    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+
+    kwargs.pop("pk")
+
+    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
+
+
+@login_required
+def make_all_favourite(request, **kwargs):
+    filtered_adverts = Advert.filter_adverts(
+        price=kwargs.get("price"), place=kwargs.get("place"), area=kwargs.get("area")
     )
 
-
-@login_required
-def make_favourite_list(request, place, price, area, pk, user_id):
     favourite = Favourite()
-    favourite.make_favourite(pk=pk, user_id=user_id)
-
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "user_id": user_id,
-    }
-
-    return HttpResponseRedirect(
-        reverse("parcels:advert_list_when_login", kwargs=context)
+    favourite.make_many_favourite(
+        user_id=kwargs.get("user_id"), adverts=filtered_adverts
     )
 
+    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
+
 
 @login_required
-def make_all_favourite(request, place, price, area, user_id):
-    filtered_adverts = Advert.filter_adverts(price, place, area)
-
+def make_favourite_from_favourites(request, **kwargs):
     favourite = Favourite()
-    favourite.make_many_favourite(user_id=user_id, adverts=filtered_adverts)
+    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "user_id": user_id,
-    }
+    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
 
-    return HttpResponseRedirect(
-        reverse("parcels:advert_list_when_login", kwargs=context)
+
+@login_required
+def remove_favourite(request, **kwargs):
+    favourite = Favourite()
+    favourite.remove_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+
+    return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
+
+
+@login_required
+def remove_favourite_list(request, **kwargs):
+    favourite = Favourite()
+    favourite.remove_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+
+    kwargs.pop("pk")
+
+    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
+
+
+@login_required
+def remove_all_favourite(request, **kwargs):
+    filtered_adverts = Advert.filter_adverts(
+        price=kwargs.get("price"), place=kwargs.get("place"), area=kwargs.get("area")
     )
 
-
-@login_required
-def make_favourite_from_fav(request, pk, user_id):
     favourite = Favourite()
-    favourite.make_favourite(pk=pk, user_id=user_id)
-
-    context = {
-        "pk": pk,
-        "user_id": user_id,
-    }
-
-    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=context))
-
-
-@login_required
-def remove_favourite(request, place, price, area, pk, user_id):
-    favourite = Favourite()
-    favourite.remove_favourite(pk=pk, user_id=user_id)
-
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "pk": pk,
-        "user_id": user_id,
-    }
-
-    return HttpResponseRedirect(
-        reverse("parcels:advert_detail_when_login", kwargs=context)
+    favourite.remove_many_favourite(
+        user_id=kwargs.get("user_id"), adverts=filtered_adverts
     )
 
+    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
+
 
 @login_required
-def remove_favourite_list(request, place, price, area, pk, user_id):
+def remove_favourite_from_favourites(request, **kwargs):
     favourite = Favourite()
-    favourite.remove_favourite(pk=pk, user_id=user_id)
+    favourite.remove_favourite(**kwargs)
 
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "user_id": user_id,
-    }
+    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
 
-    return HttpResponseRedirect(
-        reverse("parcels:advert_list_when_login", kwargs=context)
+
+@login_required
+def remove_favourite_from_favourites_list(request, **kwargs):
+    favourite = Favourite()
+    favourite.remove_favourite(**kwargs)
+
+    kwargs.pop("pk")
+
+    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=kwargs))
+
+
+@login_required
+def remove_all_favourite_from_favourites(request, **kwargs):
+    favourite = Favourite()
+    fav_id = favourite.get_fav_id(user_id=kwargs.get("user_id"))
+    favourite.remove_many_favourite_from_favourites(
+        user_id=kwargs.get("user_id"), pk_list=fav_id
     )
 
-
-@login_required
-def remove_all_favourite(request, place, price, area, user_id):
-    filtered_adverts = Advert.filter_adverts(price, place, area)
-
-    favourite = Favourite()
-    favourite.remove_many_favourite(user_id=user_id, adverts=filtered_adverts)
-
-    context = {
-        "place": place,
-        "price": price,
-        "area": area,
-        "user_id": user_id,
-    }
-
-    return HttpResponseRedirect(
-        reverse("parcels:advert_list_when_login", kwargs=context)
-    )
-
-
-@login_required
-def remove_favourite_from_fav(request, pk, user_id):
-    favourite = Favourite()
-    favourite.remove_favourite(pk=pk, user_id=user_id)
-
-    context = {
-        "pk": pk,
-        "user_id": user_id,
-    }
-
-    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=context))
-
-
-@login_required
-def remove_favourite_from_fav_list(request, pk, user_id):
-    favourite = Favourite()
-    favourite.remove_favourite(pk=pk, user_id=user_id)
-
-    context = {"user_id": user_id}
-
-    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=context))
-
-
-@login_required
-def remove_all_favourite_from_fav(request, user_id):
-    favourite = Favourite()
-
-    fav_id = favourite.get_fav_id(user_id=user_id)
-    favourite.remove_many_favourite_from_fav(user_id=user_id, pk_list=fav_id)
-
-    context = {"user_id": user_id}
-
-    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=context))
+    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=kwargs))
 
 
 class Echo:
-    def write(self, value):
+    @staticmethod
+    def write(value):
         return value
 
 

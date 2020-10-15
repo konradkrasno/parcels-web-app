@@ -4,7 +4,7 @@
 <div>
 	
 {% if advert_list %}
-	<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite_from_fav' user_id=user.id %}">
+	<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite_from_favourites' user_id=user.id %}">
 	    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
 	</a>
 	<a class="btn btn-default" href="{% url 'parcels:streaming_csv' user_id=user.id %}">Pobierz jako plik csv</a>
@@ -20,7 +20,7 @@
 
 		<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
 
-		<a class="btn btn-default" href="{% url 'parcels:remove_favourite_from_fav_list' pk=advert.pk user_id=user.id %}">
+		<a class="btn btn-default" href="{% url 'parcels:remove_favourite_from_favourites_list' pk=advert.pk user_id=user.id %}">
 		    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
 		</a>
 

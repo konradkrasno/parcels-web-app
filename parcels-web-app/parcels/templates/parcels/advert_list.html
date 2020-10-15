@@ -20,9 +20,9 @@
 		{% for advert in advert_list %}
 		<div class="post">
 			{% if user.is_authenticated %}
-				<h2><a href="{% url 'parcels:advert_detail_when_login' place=place price=price area=area pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
+				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
 			{% else %}
-				<h2><a href="{% url 'parcels:advert_detail_when_logout' place=place price=price area=area pk=advert.pk %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>		
+				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=0 %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
 			{% endif %}
 				<h3>{{ advert.price }} PLN</h3>
 				<h3>{{ advert.price_per_m2 }} PLN/m2</h3>
