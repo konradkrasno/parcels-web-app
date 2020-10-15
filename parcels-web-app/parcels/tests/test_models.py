@@ -3,8 +3,8 @@ from unittest.mock import patch, mock_open
 
 import json
 
-from ..models import Advert, Favourite
-from .test_data import data
+from parcels.models import Advert, Favourite
+from parcels.tests.test_data import data
 
 # Create your tests here.
 
@@ -64,6 +64,7 @@ class FavouriteTests(TestCase):
     def test_add_to_favourite_first_time(self):
         favourite = Favourite()
         favourite.add_to_favourite_first_time(pk=100, user_id=1)
+        favourite.save()
 
         expected_data = {
             'user_id': 1,
