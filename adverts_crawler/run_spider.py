@@ -37,9 +37,7 @@ process = CrawlerProcess(settings={"FEED_FORMAT": "json", "FEED_URI": "adverts.j
 
 
 if __name__ == "__main__":
-    # process.crawl(MorizonSpider)
-    # process.crawl(AdresowoSpider)
-    process.crawl(StrzelczykSpider)
+    process.crawl(MorizonSpider)
     process.start()
 
     # make post request to django service for uploading data to database
