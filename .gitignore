@@ -1,0 +1,10 @@
+images/*
+venv/*
+.idea/*
+adverts.json
+secure.json
+*/__pycache__
+*/*/__pycache__
+*/*/*/__pycache__
+parcels-web-app/parcels/migrations
+to_do.txt
