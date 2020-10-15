@@ -1,0 +1,36 @@
+{% extends "parcels/base.html" %}
+{% block content %}
+
+<div>
+	
+{% if advert_list %}
+	<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite_from_fav' user_id=user.id %}">
+	    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
+	</a>
+	<a class="btn btn-default" href="{% url 'parcels:streaming_csv' user_id=user.id %}">Pobierz jako plik csv</a>
+	<a class="btn btn-default" href="{% url 'parcels:sending_csv' user_id=user.id %}">Wyślij email z plikiem csv</a>
+
+	<h2>Zapisane ogłoszenia: </h2>
+
+	{% for advert in advert_list %}
+	<div class="post">
+		<h2><a href="{% url 'parcels:favourite_detail' pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}:{{ advert.place }}</a></h2>
+		<h3>{{ advert.price }} PLN</h3>
+		<h3>{{ advert.price_per_m2 }} PLN/m2</h3>
+
+		<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
+
+		<a class="btn btn-default" href="{% url 'parcels:remove_favourite_from_fav_list' pk=advert.pk user_id=user.id %}">
+		    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
+		</a>
+
+	</div>
+	{% endfor %}
+
+{% else %}
+<h3>Brak zapisanych ogłoszeń.</h3>
+{% endif %}
+
+</div>
+
+{% endblock %}

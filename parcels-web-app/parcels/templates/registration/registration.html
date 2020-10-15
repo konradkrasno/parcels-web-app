@@ -1,0 +1,26 @@
+{% extends "parcels/base.html" %}
+{% block content %}
+
+<div>
+
+	{% if user.is_active %}
+
+	<h2>Dziękujemy za rejestrację!</h2>
+	<a href="{% url 'parcels:login' %}">Zaloguj</a>
+
+
+	{% else %}
+	<h2>Wypełnij formularz rejestracyjny: </h2>
+	<form class="post-form" method="POST">
+	{% csrf_token %}
+	{{ user_form.as_p }}
+	{{ verify_form.as_p }}
+	<button type="submit" class="save btn btn-default">Zarejestruj</button>
+</form>
+
+
+	{% endif %}
+
+</div>
+
+{% endblock %}

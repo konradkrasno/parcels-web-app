@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  task-manager:
+    image: funkyfuture/deck-chores:1
+    restart: unless-stopped
+    environment:
+      TIMEZONE: Europe/Warsaw
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  crawler:
+    build:
+      context: ./adverts_crawler
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: tail -f /dev/null
+    labels:
+      deck-chores.crawl.command: python3 ./adverts_crawler/run_spider.py
+      deck-chores.crawl.interval: daily
+
+  django:
+    build:
+      context: ./parcels-web-app
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
