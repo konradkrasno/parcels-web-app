@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 
-from ..forms import AdvertForm, SignUp
+from parcels.forms import AdvertForm, SignUp
 
 # Create your tests here.
 
