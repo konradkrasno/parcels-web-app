@@ -276,7 +276,7 @@ class FavouriteTests(TestCase):
     def test_remove_many_favourite_from_favourites(self):
         actual_adverts_1 = Advert.objects.all()
 
-        Favourite.remove_many_favourite_from_favourites(user_id=1, pk_list=[1, 2])
+        Favourite.remove_many_favourite(user_id=1, adverts=[1, 2])
 
         Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_1)
 
@@ -301,7 +301,7 @@ class FavouriteTests(TestCase):
             expected_data_2,
         )
 
-        Favourite.remove_many_favourite_from_favourites(user_id=1, pk_list=[1, 2, 3, 4, 5])
+        Favourite.remove_many_favourite(user_id=1, adverts=[1, 2, 3, 4, 5])
 
         expected_data_2 = {"user_id": 1, "favourite": "6,7"}
 
@@ -310,7 +310,7 @@ class FavouriteTests(TestCase):
             expected_data_2,
         )
 
-        Favourite.remove_many_favourite_from_favourites(user_id=1, pk_list=[6, 7])
+        Favourite.remove_many_favourite(user_id=1, adverts=[6, 7])
 
         expected_data_2 = {"user_id": 1, "favourite": ""}
 
