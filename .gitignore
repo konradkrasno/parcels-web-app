@@ -1,10 +1,11 @@
 images/*
 venv/*
 .idea/*
-adverts.json
+scraped_data/*
 secure.json
 */__pycache__
 */*/__pycache__
 */*/*/__pycache__
 parcels-web-app/parcels/migrations
+db.sqlite3
 to_do.txt
