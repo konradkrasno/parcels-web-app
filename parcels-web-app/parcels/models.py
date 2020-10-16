@@ -1,9 +1,12 @@
 import logging
-import json
 import re
+import pandas as pd
+import glob
 
 from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
+
+from django.db.utils import ProgrammingError
 from django.db.models import QuerySet
 
 from typing import Union
@@ -14,7 +17,6 @@ logging.basicConfig(level=logging.DEBUG)
 class Advert(models.Model):
     """ Model stores scraped adverts data. """
 
-    store_id = models.PositiveIntegerField(null=True)
     place = models.CharField(max_length=250, null=True)
     county = models.CharField(max_length=250, null=True)
     price = models.FloatField(null=True)
@@ -30,18 +32,37 @@ class Advert(models.Model):
         )
 
     @classmethod
-    def download_adverts_from_json(cls):
-        """ Load data from adverts.json file and save to database. """
-        try:
-            with open("adverts.json", "r") as file:
-                adv = json.load(file)
-        except FileNotFoundError:
-            logging.error("Can not find file adverts.json")
+    def load_adverts(cls):
+        """ Load data from file and save to database. """
 
+        files = glob.glob("scraped_data/*.csv")
+
+        if files:
+            for file in files:
+                adv = pd.read_csv(file)
+
+                try:
+                    for item in adv.values:
+                        try:
+                            cls(
+                                place=item[0],
+                                county=item[1],
+                                price=item[2],
+                                price_per_m2=item[3],
+                                area=item[4],
+                                link=item[5],
+                                date_added=item[6],
+                                description=item[7]
+                            ).save()
+                        except ValueError as e:
+                            logging.error(e)
+
+                except ProgrammingError:
+                    raise ProgrammingError("You have to make migrations before add data to database.")
         else:
-            for item in adv:
-                advert = cls(**item)
-                advert.save()
+            raise FileNotFoundError("No files to added.")
+
+        logging.info("Data successfully updated.")
 
     @classmethod
     def delete_duplicates(cls):

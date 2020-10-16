@@ -42,13 +42,11 @@ class UploadData(View):
     @staticmethod
     def post(request) -> JsonResponse:
         try:
-            Advert.download_adverts_from_json()
+            Advert.load_adverts()
 
-        except ProgrammingError:
-            logging.error("You have to make migrations before add data to database.")
-            return JsonResponse(
-                {"OK": "You have to make migrations before add data to database."}
-            )
+        except (ProgrammingError, FileNotFoundError) as e:
+            logging.error(e.__str__())
+            return JsonResponse({"OK": e.__str__()})
 
         else:
             Advert.delete_duplicates()

@@ -20,9 +20,9 @@ class AdvertTests(TestCase):
         Advert.delete_duplicates()
 
     @patch("builtins.open", new_callable=mock_open, read_data=json.dumps(data))
-    def test_download_adverts_from_json(self, mock_file):
-        Advert.download_adverts_from_json()
-        mock_file.assert_called_with("adverts.json", "r")
+    def test_load_adverts(self, mock_file):
+        Advert.load_adverts()
+        mock_file.assert_called_with("adverts.csv", "r")
         self.assertEqual(
             Advert.objects.values("description")[0]["description"],
             data[0]["description"],

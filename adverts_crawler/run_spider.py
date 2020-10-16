@@ -1,8 +1,10 @@
+import os
+import glob
 import logging
 import requests
-import os
 import re
 
+from scrapy.utils.project import get_project_settings
 from scrapy.crawler import CrawlerProcess
 from adverts_crawler.spiders.scraper import (
     MorizonSpider,
@@ -30,14 +32,16 @@ except FileNotFoundError:
 logging.info("Host: {}".format(host))
 
 
-if "adverts.json" in os.listdir("."):
-    os.remove("adverts.json")
-
-process = CrawlerProcess(settings={"FEED_FORMAT": "json", "FEED_URI": "adverts.json"})
-
-
 if __name__ == "__main__":
+    [os.remove(file) for file in glob.glob("./scraped_data/*.csv")]
+
+    s = get_project_settings()
+    s["FEED_FORMAT"] = "csv"
+    s["FEED_URI"] = "scraped_data/adverts.csv"
+    process = CrawlerProcess(s)
     process.crawl(MorizonSpider)
+    process.crawl(AdresowoSpider)
+    process.crawl(StrzelczykSpider)
     process.start()
 
     # make post request to django service for uploading data to database
