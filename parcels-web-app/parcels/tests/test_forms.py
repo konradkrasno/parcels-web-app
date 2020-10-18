@@ -1,15 +1,20 @@
-from django.test import TestCase, Client
+import pytest
 
+from django.test import Client
 from parcels.forms import AdvertForm, SignUp
 
-# Create your tests here.
 
+@pytest.mark.django_db
+class TestForms:
+    """ Class for testing Django forms. """
 
-class AdvertFormTests(TestCase):
-    def setUp(self):
-        self.client = Client()
+    pytestmark = pytest.mark.django_db
 
-    def test_advert_form_form_valid(self):
+    @pytest.fixture
+    def client(self):
+        return Client()
+
+    def test_advert_form_when_valid(self):
         form = AdvertForm(
             data={
                 "place": "Warszawa",
@@ -17,35 +22,31 @@ class AdvertFormTests(TestCase):
                 "area": "1000",
             }
         )
-        self.assertTrue(form.is_valid())
 
-    def test_advert_form_form_invalid(self):
+        assert form.is_valid()
+
+    def test_advert_form_when_invalid(self):
         form = AdvertForm(
             data={
                 "price": "500000",
                 "area": "1000",
             }
         )
-        self.assertFalse(form.is_valid())
+        assert not form.is_valid()
 
-
-class SignUpTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-
-    def test_sign_up_form_valid(self):
+    def test_sign_up_form_when_valid(self):
         form = SignUp(
             data={
                 "username": "test_user",
-                "password1": "zorro132",
-                "password2": "zorro132",
+                "password1": "secret132",
+                "password2": "secret132",
                 "email1": "test@gmail.com",
                 "email2": "test@gmail.com",
             }
         )
-        self.assertTrue(form.is_valid())
+        assert form.is_valid()
 
-    def test_sign_up_form_invalid(self):
+    def test_sign_up_form_when_invalid(self):
         form = SignUp(
             data={
                 "username": "test_user",
@@ -55,4 +56,4 @@ class SignUpTests(TestCase):
                 "email2": "test@gmail.com",
             }
         )
-        self.assertFalse(form.is_valid())
+        assert not form.is_valid()
