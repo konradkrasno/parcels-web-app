@@ -42,7 +42,7 @@ class UploadData(View):
     @staticmethod
     def post(request) -> JsonResponse:
         try:
-            Advert.load_adverts()
+            Advert.load_adverts("scraped_data")
 
         except (ProgrammingError, FileNotFoundError) as e:
             logging.error(e.__str__())
@@ -102,7 +102,7 @@ class AdvertListView(ListView):
 
         if self.kwargs.get("user_id"):
             favourite = Favourite()
-            fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+            fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
             context["fav_id"] = fav_id
 
         return context
@@ -128,7 +128,7 @@ class AdvertDetailView(DetailView):
 
         if self.kwargs.get("user_id"):
             favourite = Favourite()
-            fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+            fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
             context["fav_id"] = fav_id
 
         return context
@@ -140,7 +140,7 @@ class FavouriteListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self) -> QuerySet:
         queryset = super().get_queryset()
-        fav_id = Favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
         return queryset.filter(pk__in=fav_id).order_by("place")
 
     def get_context_data(self, **kwargs) -> dict:
@@ -149,7 +149,7 @@ class FavouriteListView(LoginRequiredMixin, ListView):
             self.object_list = self.get_queryset()
 
         favourite = Favourite()
-        fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+        fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
 
         context = super().get_context_data(**kwargs)
         context["fav_id"] = fav_id
@@ -171,7 +171,7 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
             self.object = self.get_queryset()
 
         favourite = Favourite()
-        fav_id = favourite.get_fav_id(user_id=self.kwargs.get("user_id"))
+        fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
 
         context = super().get_context_data(**kwargs)
         context["fav_id"] = fav_id
@@ -258,7 +258,7 @@ def make_favourite(request, **kwargs) -> HttpResponseRedirect:
     print("request:", request)
 
     favourite = Favourite()
-    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
     return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
 
@@ -268,7 +268,7 @@ def make_favourite_list(request, **kwargs) -> HttpResponseRedirect:
     """ Adding advert to list of favourite in advert_list view. """
 
     favourite = Favourite()
-    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
     kwargs.pop("pk")
 
@@ -296,7 +296,7 @@ def make_favourite_from_favourites(request, **kwargs) -> HttpResponseRedirect:
     """ Adding advert to list of favourite in favourite_detail view. """
 
     favourite = Favourite()
-    favourite.make_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
     return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
 
@@ -306,7 +306,7 @@ def remove_favourite(request, **kwargs) -> HttpResponseRedirect:
     """ Deleting advert from list of favourite in advert_detail view. """
 
     favourite = Favourite()
-    favourite.remove_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    favourite.remove_from_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
     return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
 
@@ -316,7 +316,7 @@ def remove_favourite_list(request, **kwargs) -> HttpResponseRedirect:
     """ Deleting advert from list of favourite in advert_list view. """
 
     favourite = Favourite()
-    favourite.remove_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    favourite.remove_from_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
 
     kwargs.pop("pk")
 
@@ -332,7 +332,7 @@ def remove_all_favourite(request, **kwargs) -> HttpResponseRedirect:
     )
 
     favourite = Favourite()
-    favourite.remove_many_favourite(
+    favourite.remove_from_favourite(
         user_id=kwargs.get("user_id"), adverts=filtered_adverts
     )
 
@@ -344,7 +344,7 @@ def remove_favourite_from_favourites(request, **kwargs) -> HttpResponseRedirect:
     """ Deleting advert from list of favourite in favourite_detail view. """
 
     favourite = Favourite()
-    favourite.remove_favourite(**kwargs)
+    favourite.remove_from_favourite(**kwargs)
 
     return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
 
@@ -354,7 +354,7 @@ def remove_favourite_from_favourites_list(request, **kwargs) -> HttpResponseRedi
     """ Deleting advert from list of favourite in favourite_list view. """
 
     favourite = Favourite()
-    favourite.remove_favourite(**kwargs)
+    favourite.remove_from_favourite(**kwargs)
 
     kwargs.pop("pk")
 
@@ -366,8 +366,8 @@ def remove_all_favourite_from_favourites(request, **kwargs) -> HttpResponseRedir
     """ Deleting all adverts from list of favourite in favourite_list view. """
 
     favourite = Favourite()
-    fav_id = favourite.get_fav_id(user_id=kwargs.get("user_id"))
-    favourite.remove_many_favourite(user_id=kwargs.get("user_id"), adverts=fav_id)
+    fav_id = favourite.get_favourite_ids(user_id=kwargs.get("user_id"))
+    favourite.remove_from_favourite(user_id=kwargs.get("user_id"), adverts=fav_id)
 
     return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=kwargs))
 
@@ -382,7 +382,7 @@ class Echo:
 
 def streaming_csv_view(request, user_id: int) -> StreamingHttpResponse:
     favourite = Favourite()
-    fav_id = favourite.get_fav_id(user_id=user_id)
+    fav_id = favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
 
     rows = [
@@ -420,7 +420,7 @@ def streaming_csv_view(request, user_id: int) -> StreamingHttpResponse:
 
 def sending_csv_view(request, user_id: int) -> HttpResponseRedirect:
     favourite = Favourite()
-    fav_id = favourite.get_fav_id(user_id=user_id)
+    fav_id = favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
 
     rows = [

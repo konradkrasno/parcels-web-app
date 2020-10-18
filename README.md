@@ -92,5 +92,5 @@ python3 manage.py runserver
 To run unit tests write in command prompt:
 
 ```bash
-python manage.py test parcels.tests
+pytest -v parcels-web-app/parcels/tests
 ```

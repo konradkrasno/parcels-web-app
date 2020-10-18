@@ -1,320 +1,251 @@
-from django.test import TestCase
-from unittest.mock import patch, mock_open
+import pytest
+import os
+import pandas as pd
 
-import json
-
+from parcels.tests.test_data import testing_data
 from parcels.models import Advert, Favourite
-from parcels.tests.test_data import data
 
-# Create your tests here.
+from django.db.utils import IntegrityError
 
 
-class AdvertTests(TestCase):
-    def setUp(self):
-        Advert.objects.all().delete()
+@pytest.mark.django_db
+class TestAdvert:
+    """ Class for testing Advert model and its methods. """
 
-        for item in data:
-            advert = Advert(**item)
-            advert.save()
+    pytestmark = pytest.mark.django_db
+    testing_catalog = "fixtures"
+
+    @pytest.fixture
+    def create_test_csv(self):
+        """ Creates test csv file for testing loading data from file to database. """
+        try:
+            os.mkdir(os.path.join(os.getcwd(), self.testing_catalog))
+        except FileExistsError:
+            pass
+
+        header = [
+            "place",
+            "county",
+            "price",
+            "price_per_m2",
+            "area",
+            "link",
+            "date_added",
+            "description",
+        ]
+        rows = [item.values() for item in testing_data]
+        df = pd.DataFrame(rows, columns=header)
+        df.to_csv(
+            os.path.join(os.getcwd(), self.testing_catalog, "test_data.csv"),
+            index=False,
+        )
+
+    @pytest.fixture
+    def add_testing_data_to_db(self):
+        """Adds data for testing Django models to database."""
+
+        for item in testing_data:
+            Advert(**item).save()
 
         Advert.delete_duplicates()
 
-    @patch("builtins.open", new_callable=mock_open, read_data=json.dumps(data))
-    def test_load_adverts(self, mock_file):
-        Advert.load_adverts()
-        mock_file.assert_called_with("adverts.csv", "r")
-        self.assertEqual(
-            Advert.objects.values("description")[0]["description"],
-            data[0]["description"],
+    def test_load_adverts(self, create_test_csv):
+        Advert.load_adverts(self.testing_catalog)
+        assert Advert.objects.exists()
+
+    def test_load_adverts_when_no_files(self):
+        os.remove(os.path.join(os.getcwd(), self.testing_catalog, "test_data.csv"))
+        with pytest.raises(FileNotFoundError):
+            Advert.load_adverts(self.testing_catalog)
+
+    def test_delete_duplicates(self, add_testing_data_to_db):
+        actual_data = [obj["place"] for obj in Advert.objects.values("place")]
+        expected_data = ["Dębe Wielkie", "Rysie"]
+        assert actual_data == expected_data
+
+    def test_filter_adverts(self, add_testing_data_to_db):
+        assert (
+            Advert.filter_adverts(place="Dębe Wielkie", price=400000, area=800).values(
+                "place"
+            )[0]["place"]
+            == "Dębe Wielkie"
         )
 
-    def test_delete_duplicates(self):
-        actual_data = [obj["link"] for obj in Advert.objects.values("link")]
-        expected_data = [
-            "https://debe-wielkie.nieruchomosci-online.pl/dzialka,na-sprzedaz/21470800.html",
-            "https://rysie.nieruchomosci-online.pl/dzialka,na-sprzedaz/20654752.html",
-        ]
-
-        self.assertListEqual(actual_data, expected_data)
-
-    def test_filter_adverts(self):
-        filtered_adverts_1 = Advert.filter_adverts(
-            place="Dębe Wielkie", price=400000, area=800
-        ).values("link")
-        actual_data_1 = [obj["link"] for obj in filtered_adverts_1]
-
-        expected_data_1 = [
-            "https://debe-wielkie.nieruchomosci-online.pl/dzialka,na-sprzedaz/21470800.html"
-        ]
-
-        filtered_adverts_2 = Advert.filter_adverts(
-            place="Rysie", price=200000, area=1000
-        ).values("link")
-        actual_data_2 = [obj["link"] for obj in filtered_adverts_2]
-
-        expected_data_2 = [
-            "https://rysie.nieruchomosci-online.pl/dzialka,na-sprzedaz/20654752.html"
-        ]
-
-        self.assertListEqual(actual_data_1, expected_data_1)
-        self.assertListEqual(actual_data_2, expected_data_2)
+        assert (
+            Advert.filter_adverts(place="Rysie", price=200000, area=1000).values(
+                "place"
+            )[0]["place"]
+            == "Rysie"
+        )
 
 
-class FavouriteTests(TestCase):
-    def setUp(self):
-        Advert.objects.all().delete()
+@pytest.mark.django_db
+class TestFavourite:
+    """ Class for testing Favourite model and its methods. """
 
-        for item in data:
-            advert = Advert(**item)
-            advert.save()
+    pytestmark = pytest.mark.django_db
+    testing_catalog = "fixtures"
 
-    def test_add_to_favourite_first_time(self):
-        favourite = Favourite()
-        favourite.add_to_favourite_first_time(pk=100, user_id=1)
+    @pytest.fixture
+    def favourite(self):
+        return Favourite(user_id=1)
+
+    @pytest.fixture
+    def add_testing_data_to_db(self):
+        """Adds data for testing Django models to database."""
+
+        for item in testing_data:
+            Advert(**item).save()
+
+        Advert.delete_duplicates()
+
+    def test_add_to_favourite_when_user_id_set(self, favourite):
+        favourite.add_to_favourite(pk=100)
+        favourite.add_to_favourite(pk=100)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": "100"}
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100"
+        }
 
-        self.assertDictEqual(
-            Favourite.objects.values("user_id", "favourite")[0], expected_data
-        )
-
-    def test_add_to_favourite(self):
-        favourite = Favourite()
-        favourite.add_to_favourite_first_time(pk=100, user_id=1)
+        favourite.add_to_favourite(pk=101)
         favourite.add_to_favourite(pk=101)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": "100,101"}
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100,101"
+        }
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
-
-        favourite.add_to_favourite(pk=101)
-        favourite.save()
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
-
-    def test_delete_from_favourite(self):
+    def test_add_to_favourite_when_user_id_not_set(self):
         favourite = Favourite()
-        favourite.add_to_favourite_first_time(pk=100, user_id=1)
-        favourite.add_to_favourite(pk=101)
-        favourite.add_to_favourite(pk=102)
-        favourite.add_to_favourite(pk=103)
+        with pytest.raises(IntegrityError):
+            favourite.add_to_favourite(pk=100)
+
+    def test_delete_from_favourite(self, favourite):
+        favourite.delete_from_favourite(pk=100)
+
+        ids = [100, 101, 102, 103]
+        for _id in ids:
+            favourite.add_to_favourite(pk=_id)
         favourite.save()
 
         favourite.delete_from_favourite(pk=101)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": "100,102,103"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100,102,103"
+        }
 
         favourite.delete_from_favourite(pk=100)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": "102,103"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "102,103"
+        }
 
         favourite.delete_from_favourite(pk=103)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": "102"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "102"
+        }
 
         favourite.delete_from_favourite(pk=102)
         favourite.save()
 
-        expected_data = {"user_id": 1, "favourite": ""}
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": ""
+        }
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
-
-    def test_get_fav_id(self):
-        fav_id_1 = Favourite.get_fav_id(user_id=1)
-        self.assertEqual(fav_id_1, [])
-
-        favourite = Favourite()
-        favourite.add_to_favourite_first_time(pk=100, user_id=1)
-        favourite.add_to_favourite(pk=101)
-        favourite.add_to_favourite(pk=102)
-        favourite.add_to_favourite(pk=103)
+    def test_get_fav_id_when_user_id_exists(self, favourite):
+        ids = [100, 101, 102, 103]
+        for _id in ids:
+            favourite.add_to_favourite(pk=_id)
         favourite.save()
 
-        fav_id_2 = Favourite.get_fav_id(user_id=1)
-        self.assertListEqual(fav_id_2, [100, 101, 102, 103])
+        assert favourite.get_favourite_ids(user_id=1) == ids
 
-    def test_make_favourite(self):
-        Favourite.make_favourite(pk=100, user_id=1)
+    def test_get_fav_id_when_user_id_not_exists(self, favourite):
+        with pytest.raises(ValueError):
+            favourite.get_favourite_ids(user_id=2)
 
-        expected_data = {"user_id": 1, "favourite": "100"}
+    def test_create_or_update_with_list_of_advert_ids(self):
+        ids = [100, 101, 102, 103]
+        Favourite.create_or_update(user_id=1, adverts=ids)
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100,101,102,103"
+        }
 
-        Favourite.make_favourite(pk=101, user_id=1)
-        Favourite.make_favourite(pk=102, user_id=1)
-        Favourite.make_favourite(pk=103, user_id=1)
+    def test_create_or_update_with_queryset_of_adverts(self, add_testing_data_to_db):
+        adverts = Advert.objects.all()
+        Favourite.create_or_update(user_id=1, adverts=adverts)
 
-        expected_data = {"user_id": 1, "favourite": "100,101,102,103"}
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "1,2"
+        }
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+    def test_create_or_update_with_empty_list(self):
+        Favourite.create_or_update(user_id=1, adverts=[])
 
-    def test_make_many_favourite(self):
-        actual_adverts_1 = Advert.objects.all()
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_1)
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": ""
+        }
 
-        expected_data_1 = {"user_id": 1, "favourite": "1,2,3,4,5"}
+    def test_create_or_update_with_empty_queryset(self):
+        empty_queryset = Advert.objects.none()
+        Favourite.create_or_update(user_id=1, adverts=empty_queryset)
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_1,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": ""
+        }
 
-        for item in data[:2]:
-            advert = Advert(**item)
-            advert.save()
+    def test_create_or_update_when_update(self):
+        Favourite.create_or_update(user_id=1, adverts=[100])
 
-        actual_adverts_2 = Advert.objects.all()
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_2)
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100"
+        }
 
-        expected_data_2 = {"user_id": 1, "favourite": "1,2,3,4,5,6,7"}
+        Favourite.create_or_update(user_id=1, adverts=[101])
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "100,101"
+        }
 
-    def test_remove_favourite(self):
-        Favourite.remove_favourite(pk=100, user_id=1)
+    def test_remove_from_favourite_when_ids_in_favourite(self):
+        ids = [100, 101, 102, 103]
+        Favourite.create_or_update(user_id=1, adverts=ids)
 
-        favourite = Favourite()
-        favourite.add_to_favourite_first_time(pk=100, user_id=1)
-        favourite.add_to_favourite(pk=101)
-        favourite.add_to_favourite(pk=102)
-        favourite.add_to_favourite(pk=103)
-        favourite.save()
+        Favourite.remove_from_favourite(user_id=1, adverts=[100, 103])
 
-        Favourite.remove_favourite(pk=102, user_id=1)
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": "101,102"
+        }
 
-        expected_data = {"user_id": 1, "favourite": "100,101,103"}
+    def test_remove_from_favourite_when_ids_not_in_favourite(self):
+        Favourite.create_or_update(user_id=1, adverts=[])
 
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data,
-        )
+        Favourite.remove_from_favourite(user_id=1, adverts=[100, 103])
 
-    def test_remove_many_favourite(self):
-        actual_adverts_1 = Advert.objects.all()
+        assert Favourite.objects.values("user_id", "favourite")[0] == {
+            "user_id": 1,
+            "favourite": ""
+        }
 
-        Favourite.remove_many_favourite(user_id=1, adverts=actual_adverts_1)
-
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_1)
-
-        expected_data_1 = {"user_id": 1, "favourite": "1,2,3,4,5"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_1,
-        )
-
-        for item in data[:2]:
-            advert = Advert(**item)
-            advert.save()
-
-        actual_adverts_2 = Advert.objects.all()
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_2)
-
-        expected_data_2 = {"user_id": 1, "favourite": "1,2,3,4,5,6,7"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
-
-        Favourite.remove_many_favourite(user_id=1, adverts=actual_adverts_1)
-
-        expected_data_2 = {"user_id": 1, "favourite": "6,7"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
-
-        Favourite.remove_many_favourite(user_id=1, adverts=actual_adverts_2)
-
-        expected_data_2 = {"user_id": 1, "favourite": ""}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
-
-    def test_remove_many_favourite_from_favourites(self):
-        actual_adverts_1 = Advert.objects.all()
-
-        Favourite.remove_many_favourite(user_id=1, adverts=[1, 2])
-
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_1)
-
-        expected_data_1 = {"user_id": 1, "favourite": "1,2,3,4,5"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_1,
-        )
-
-        for item in data[:2]:
-            advert = Advert(**item)
-            advert.save()
-
-        actual_adverts_2 = Advert.objects.all()
-        Favourite.make_many_favourite(user_id=1, adverts=actual_adverts_2)
-
-        expected_data_2 = {"user_id": 1, "favourite": "1,2,3,4,5,6,7"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
-
-        Favourite.remove_many_favourite(user_id=1, adverts=[1, 2, 3, 4, 5])
-
-        expected_data_2 = {"user_id": 1, "favourite": "6,7"}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
-
-        Favourite.remove_many_favourite(user_id=1, adverts=[6, 7])
-
-        expected_data_2 = {"user_id": 1, "favourite": ""}
-
-        self.assertDictEqual(
-            Favourite.objects.filter(user_id=1).values("user_id", "favourite")[0],
-            expected_data_2,
-        )
+    def test_remove_from_favourite_when_user_does_not_exists(self):
+        Favourite.remove_from_favourite(user_id=2, adverts=[100])
+        assert not Favourite.objects.exists()

@@ -1,6 +1,5 @@
-data = [
+testing_data = [
     {
-        "store_id": 1,
         "place": "D\u0119be Wielkie",
         "county": "mi\u0144ski",
         "price": "376000",
@@ -11,7 +10,6 @@ data = [
         "description": "Dzia\u0142ka budowlana o powierzchni 1240m po\u0142o\u017cona w cichej spokojnej malowniczej okolicy w miejscowo\u015bci D\u0119be Wielkie W s\u0105siedztwie domy jednorodzinne, dzia\u0142ki. Dojazd droga utwardzon\u0105. W pobli\u017cu przystanek autobusowy. Media- pr\u0105d. Blisko do stacji PKP.   ZAPRASZAM DO OGL\u0104DANIA!  Lokalizacja: D\u0119be Wielkie  Powierzchnia: 2212 m2,   Rodzaj dzia\u0142ki: budowlana,   Cena: 376 000 z\u0142 ( 170 z\u0142/m2 )  Powierzchnia w hektarach: 0,221 ha,   po\u0142o\u017cenie: D\u0119be Wielkie, dojazd (opis): utwardzony, media: pr\u0105d, kanalizacja: brak, woda: brak, elektryczno\u015b\u0107, wymiary dzia\u0142ki: 26x72,   Wi\u0119cej informacji oraz mo\u017cliwo\u015b\u0107 um\u00f3wienia spotkania:   Agent prowadz\u0105cy:   Eliza Jenda  tel.:     e-mail:     Grupa PL Nieruchomo\u015bci - oddzia\u0142 PLN Mi\u0144sk    tel.:     Dy\u017cur telefoniczny w ka\u017cdy dzie\u0144 tygodnia do godziny 21:00 pod numerem   .  Nad jako\u015bci\u0105 obs\u0142ugi oferty czuwa pani Anna Gliwi\u0144ska   Godziny otwarcia: pon. - pt.: 9:00 - 19:00; sob.: 9:00 - 14:00  - Zapraszamy -",
     },
     {
-        "store_id": 1,
         "place": "Rysie",
         "county": "D\u0119be Wielkie",
         "price": "175000",
@@ -22,7 +20,6 @@ data = [
         "description": "Do sprzedania dzia\u0142ka budowlana w pierwszej linii zabudowy po\u0142o\u017cona miejscowo\u015bci Rysie gmina D\u0119be Wielkie. Wymiary dzia\u0142ki 23mx97,6m; media pr\u0105d i wodoci\u0105g przy dzia\u0142ce. Dodatkowo na dzia\u0142ce znajduje si\u0119 domek letniskowy i blaszany gara\u017c. Dzia\u0142ka po\u0142o\u017cona w cichej i bardzo urokliwej okolicy. W pobli\u017cu las, idealne miejsce do wypoczynku. Dzia\u0142ka po\u0142o\u017cona jest zaledwie 9 km od Mi\u0144ska Mazowieckiego a do D\u0119be Wielkie 6,5km.  Zach\u0119cam do ogl\u0119dzin oraz kontaktu telefonicznego   Doradca klienta Agnieszka Ga\u0144ko tel.    Email: biuro@kwadrat-nieruchomo\u015bci.com  Oferta wys\u0142ana z programu dla biur nieruchomo\u015bci - asariWEB",
     },
     {
-        "store_id": 1,
         "place": "D\u0119be Wielkie",
         "county": "mi\u0144ski",
         "price": "376000",
@@ -33,7 +30,6 @@ data = [
         "description": "Dzia\u0142ka budowlana o powierzchni 1240m po\u0142o\u017cona w cichej spokojnej malowniczej okolicy w miejscowo\u015bci D\u0119be Wielkie W s\u0105siedztwie domy jednorodzinne, dzia\u0142ki. Dojazd droga utwardzon\u0105. W pobli\u017cu przystanek autobusowy. Media- pr\u0105d. Blisko do stacji PKP.   ZAPRASZAM DO OGL\u0104DANIA!  Lokalizacja: D\u0119be Wielkie  Powierzchnia: 2212 m2,   Rodzaj dzia\u0142ki: budowlana,   Cena: 376 000 z\u0142 ( 170 z\u0142/m2 )  Powierzchnia w hektarach: 0,221 ha,   po\u0142o\u017cenie: D\u0119be Wielkie, dojazd (opis): utwardzony, media: pr\u0105d, kanalizacja: brak, woda: brak, elektryczno\u015b\u0107, wymiary dzia\u0142ki: 26x72,   Wi\u0119cej informacji oraz mo\u017cliwo\u015b\u0107 um\u00f3wienia spotkania:   Agent prowadz\u0105cy:   Eliza Jenda  tel.:     e-mail:     Grupa PL Nieruchomo\u015bci - oddzia\u0142 PLN Mi\u0144sk    tel.:     Dy\u017cur telefoniczny w ka\u017cdy dzie\u0144 tygodnia do godziny 21:00 pod numerem   .  Nad jako\u015bci\u0105 obs\u0142ugi oferty czuwa pani Anna Gliwi\u0144ska   Godziny otwarcia: pon. - pt.: 9:00 - 19:00; sob.: 9:00 - 14:00  - Zapraszamy -",
     },
     {
-        "store_id": 1,
         "place": "D\u0119be Wielkie",
         "county": "mi\u0144ski",
         "price": "376000",
@@ -44,7 +40,6 @@ data = [
         "description": "Dzia\u0142ka budowlana o powierzchni 1240m po\u0142o\u017cona w cichej spokojnej malowniczej okolicy w miejscowo\u015bci D\u0119be Wielkie W s\u0105siedztwie domy jednorodzinne, dzia\u0142ki. Dojazd droga utwardzon\u0105. W pobli\u017cu przystanek autobusowy. Media- pr\u0105d. Blisko do stacji PKP.   ZAPRASZAM DO OGL\u0104DANIA!  Lokalizacja: D\u0119be Wielkie  Powierzchnia: 2212 m2,   Rodzaj dzia\u0142ki: budowlana,   Cena: 376 000 z\u0142 ( 170 z\u0142/m2 )  Powierzchnia w hektarach: 0,221 ha,   po\u0142o\u017cenie: D\u0119be Wielkie, dojazd (opis): utwardzony, media: pr\u0105d, kanalizacja: brak, woda: brak, elektryczno\u015b\u0107, wymiary dzia\u0142ki: 26x72,   Wi\u0119cej informacji oraz mo\u017cliwo\u015b\u0107 um\u00f3wienia spotkania:   Agent prowadz\u0105cy:   Eliza Jenda  tel.:     e-mail:     Grupa PL Nieruchomo\u015bci - oddzia\u0142 PLN Mi\u0144sk    tel.:     Dy\u017cur telefoniczny w ka\u017cdy dzie\u0144 tygodnia do godziny 21:00 pod numerem   .  Nad jako\u015bci\u0105 obs\u0142ugi oferty czuwa pani Anna Gliwi\u0144ska   Godziny otwarcia: pon. - pt.: 9:00 - 19:00; sob.: 9:00 - 14:00  - Zapraszamy -",
     },
     {
-        "store_id": 1,
         "place": "Rysie",
         "county": "D\u0119be Wielkie",
         "price": "175000",
