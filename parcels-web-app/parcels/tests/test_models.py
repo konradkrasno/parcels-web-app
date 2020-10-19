@@ -1,9 +1,8 @@
 import pytest
 import os
-import pandas as pd
 
-from parcels.tests.test_data import testing_data
 from parcels.models import Advert, Favourite
+from parcels.tests.fixtures import create_test_csv, add_testing_data_to_db, TEST_DIR
 
 from django.db.utils import IntegrityError
 
@@ -13,50 +12,19 @@ class TestAdvert:
     """ Class for testing Advert model and its methods. """
 
     pytestmark = pytest.mark.django_db
-    testing_catalog = "fixtures"
-
-    @pytest.fixture
-    def create_test_csv(self):
-        """ Creates test csv file for testing loading data from file to database. """
-        try:
-            os.mkdir(os.path.join(os.getcwd(), self.testing_catalog))
-        except FileExistsError:
-            pass
-
-        header = [
-            "place",
-            "county",
-            "price",
-            "price_per_m2",
-            "area",
-            "link",
-            "date_added",
-            "description",
-        ]
-        rows = [item.values() for item in testing_data]
-        df = pd.DataFrame(rows, columns=header)
-        df.to_csv(
-            os.path.join(os.getcwd(), self.testing_catalog, "test_data.csv"),
-            index=False,
-        )
-
-    @pytest.fixture
-    def add_testing_data_to_db(self):
-        """Adds data for testing Django models to database."""
-
-        for item in testing_data:
-            Advert(**item).save()
-
-        Advert.delete_duplicates()
 
     def test_load_adverts(self, create_test_csv):
-        Advert.load_adverts(self.testing_catalog)
+        Advert.load_adverts(TEST_DIR)
         assert Advert.objects.exists()
 
     def test_load_adverts_when_no_files(self):
-        os.remove(os.path.join(os.getcwd(), self.testing_catalog, "test_data.csv"))
+        try:
+            os.remove(os.path.join(os.getcwd(), TEST_DIR, "test_data.csv"))
+        except FileNotFoundError:
+            pass
+
         with pytest.raises(FileNotFoundError):
-            Advert.load_adverts(self.testing_catalog)
+            Advert.load_adverts(TEST_DIR)
 
     def test_delete_duplicates(self, add_testing_data_to_db):
         actual_data = [obj["place"] for obj in Advert.objects.values("place")]
@@ -84,20 +52,10 @@ class TestFavourite:
     """ Class for testing Favourite model and its methods. """
 
     pytestmark = pytest.mark.django_db
-    testing_catalog = "fixtures"
 
     @pytest.fixture
     def favourite(self):
         return Favourite(user_id=1)
-
-    @pytest.fixture
-    def add_testing_data_to_db(self):
-        """Adds data for testing Django models to database."""
-
-        for item in testing_data:
-            Advert(**item).save()
-
-        Advert.delete_duplicates()
 
     def test_add_to_favourite_when_user_id_set(self, favourite):
         favourite.add_to_favourite(pk=100)
@@ -106,7 +64,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100"
+            "favourite": "100",
         }
 
         favourite.add_to_favourite(pk=101)
@@ -115,7 +73,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100,101"
+            "favourite": "100,101",
         }
 
     def test_add_to_favourite_when_user_id_not_set(self):
@@ -136,7 +94,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100,102,103"
+            "favourite": "100,102,103",
         }
 
         favourite.delete_from_favourite(pk=100)
@@ -144,7 +102,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "102,103"
+            "favourite": "102,103",
         }
 
         favourite.delete_from_favourite(pk=103)
@@ -152,7 +110,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "102"
+            "favourite": "102",
         }
 
         favourite.delete_from_favourite(pk=102)
@@ -160,7 +118,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": ""
+            "favourite": "",
         }
 
     def test_get_fav_id_when_user_id_exists(self, favourite):
@@ -172,8 +130,7 @@ class TestFavourite:
         assert favourite.get_favourite_ids(user_id=1) == ids
 
     def test_get_fav_id_when_user_id_not_exists(self, favourite):
-        with pytest.raises(ValueError):
-            favourite.get_favourite_ids(user_id=2)
+        assert favourite.get_favourite_ids(user_id=2) == []
 
     def test_create_or_update_with_list_of_advert_ids(self):
         ids = [100, 101, 102, 103]
@@ -181,7 +138,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100,101,102,103"
+            "favourite": "100,101,102,103",
         }
 
     def test_create_or_update_with_queryset_of_adverts(self, add_testing_data_to_db):
@@ -190,7 +147,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "1,2"
+            "favourite": "1,2",
         }
 
     def test_create_or_update_with_empty_list(self):
@@ -198,7 +155,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": ""
+            "favourite": "",
         }
 
     def test_create_or_update_with_empty_queryset(self):
@@ -207,7 +164,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": ""
+            "favourite": "",
         }
 
     def test_create_or_update_when_update(self):
@@ -215,14 +172,14 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100"
+            "favourite": "100",
         }
 
         Favourite.create_or_update(user_id=1, adverts=[101])
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "100,101"
+            "favourite": "100,101",
         }
 
     def test_remove_from_favourite_when_ids_in_favourite(self):
@@ -233,7 +190,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": "101,102"
+            "favourite": "101,102",
         }
 
     def test_remove_from_favourite_when_ids_not_in_favourite(self):
@@ -243,7 +200,7 @@ class TestFavourite:
 
         assert Favourite.objects.values("user_id", "favourite")[0] == {
             "user_id": 1,
-            "favourite": ""
+            "favourite": "",
         }
 
     def test_remove_from_favourite_when_user_does_not_exists(self):

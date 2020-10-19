@@ -7,7 +7,7 @@ app_name = "parcels"
 
 urlpatterns = [
     path("", views.Index.as_view(), name="index"),
-    path("upload_data", csrf_exempt(views.UploadData.as_view())),
+    path("upload_data/<str:catalog>", csrf_exempt(views.UploadData.as_view()), name="upload_data"),
     path("register", views.register, name="register"),
     path("activate/<uidb64>/<token>", views.activate, name="activate"),
     path("user_login", views.user_login, name="login"),
@@ -24,6 +24,16 @@ urlpatterns = [
         "form/<place>/<price>/<area>/<int:pk>/<int:user_id>",
         views.AdvertDetailView.as_view(),
         name="advert_detail",
+    ),
+    path(
+        "favourites/<int:user_id>",
+        views.FavouriteListView.as_view(),
+        name="favourite_list",
+    ),
+    path(
+        "favourites/<int:pk>/<int:user_id>",
+        views.FavouriteDetailView.as_view(),
+        name="favourite_detail",
     ),
     path(
         "form/<place>/<price>/<area>/<int:pk>/<int:user_id>/add",
@@ -56,16 +66,6 @@ urlpatterns = [
         name="remove_all_favourite",
     ),
     path(
-        "favourites/<int:user_id>",
-        views.FavouriteListView.as_view(),
-        name="favourite_list",
-    ),
-    path(
-        "favourites/<int:pk>/<int:user_id>",
-        views.FavouriteDetailView.as_view(),
-        name="favourite_detail",
-    ),
-    path(
         "favourites/<int:pk>/<int:user_id>/add",
         views.make_favourite_from_favourites,
         name="make_favourite_from_favourites",
@@ -85,10 +85,10 @@ urlpatterns = [
         views.remove_all_favourite_from_favourites,
         name="remove_all_favourite_from_favourites",
     ),
-    path("favourite/<int:user_id>/csv", views.streaming_csv_view, name="streaming_csv"),
+    path("favourite/<int:user_id>/csv", views.streaming_csv, name="streaming_csv"),
     path(
         "favourite/<int:user_id>/sending_csv",
-        views.sending_csv_view,
+        views.sending_csv,
         name="sending_csv",
     ),
 ]

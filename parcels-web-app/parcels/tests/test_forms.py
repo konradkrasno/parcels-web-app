@@ -1,6 +1,5 @@
 import pytest
 
-from django.test import Client
 from parcels.forms import AdvertForm, SignUp
 
 
@@ -9,10 +8,6 @@ class TestForms:
     """ Class for testing Django forms. """
 
     pytestmark = pytest.mark.django_db
-
-    @pytest.fixture
-    def client(self):
-        return Client()
 
     def test_advert_form_when_valid(self):
         form = AdvertForm(

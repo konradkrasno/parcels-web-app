@@ -12,6 +12,7 @@ from adverts_crawler.spiders.scraper import (
     StrzelczykSpider,
 )
 
+DATA_CATALOG = "scraped_data"
 
 MAIN_DIR = os.path.dirname(
     os.path.dirname(
@@ -33,11 +34,11 @@ logging.info("Host: {}".format(host))
 
 
 if __name__ == "__main__":
-    [os.remove(file) for file in glob.glob("./scraped_data/*.csv")]
+    [os.remove(file) for file in glob.glob("./{}/*.csv".format(DATA_CATALOG))]
 
     s = get_project_settings()
     s["FEED_FORMAT"] = "csv"
-    s["FEED_URI"] = "scraped_data/adverts.csv"
+    s["FEED_URI"] = "{}/adverts.csv".format(DATA_CATALOG)
     process = CrawlerProcess(s)
     process.crawl(MorizonSpider)
     process.crawl(AdresowoSpider)
@@ -45,5 +46,5 @@ if __name__ == "__main__":
     process.start()
 
     # make post request to django service for uploading data to database
-    URL = "http://{}:8000/upload_data".format(host)
+    URL = "http://{}:8000/upload_data/{}".format(host, DATA_CATALOG)
     requests.post(URL)

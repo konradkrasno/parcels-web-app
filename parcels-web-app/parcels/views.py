@@ -23,7 +23,7 @@ from parcels.forms import AdvertForm, SignUp
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 
-from django.utils.encoding import force_bytes, force_text
+from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from parcels.tokens import account_activation_token
 
@@ -40,9 +40,9 @@ class UploadData(View):
     """ Uploading data from json file to database. """
 
     @staticmethod
-    def post(request) -> JsonResponse:
+    def post(request, catalog: str) -> JsonResponse:
         try:
-            Advert.load_adverts("scraped_data")
+            Advert.load_adverts(catalog)
 
         except (ProgrammingError, FileNotFoundError) as e:
             logging.error(e.__str__())
@@ -218,7 +218,7 @@ def register(request):
 
 def activate(request, uidb64, token):
     try:
-        uid = force_text(urlsafe_base64_decode(uidb64))
+        uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
@@ -254,8 +254,6 @@ def user_logout(request) -> HttpResponseRedirect:
 @login_required
 def make_favourite(request, **kwargs) -> HttpResponseRedirect:
     """ Adding advert to list of favourite in advert_detail view. """
-
-    print("request:", request)
 
     favourite = Favourite()
     favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
@@ -380,7 +378,7 @@ class Echo:
         return value
 
 
-def streaming_csv_view(request, user_id: int) -> StreamingHttpResponse:
+def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
     favourite = Favourite()
     fav_id = favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
@@ -418,7 +416,7 @@ def streaming_csv_view(request, user_id: int) -> StreamingHttpResponse:
     return response
 
 
-def sending_csv_view(request, user_id: int) -> HttpResponseRedirect:
+def sending_csv(request, user_id: int) -> HttpResponseRedirect:
     favourite = Favourite()
     fav_id = favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")

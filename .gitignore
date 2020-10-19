@@ -2,6 +2,7 @@ images/*
 venv/*
 .idea/*
 scraped_data/*
+fixtures/*
 secure.json
 */__pycache__
 */*/__pycache__

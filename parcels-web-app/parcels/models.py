@@ -134,9 +134,7 @@ class Favourite(models.Model):
         try:
             favourite = cls.objects.get(user_id=user_id)
         except cls.DoesNotExist:
-            msg = "User with id {} does not exists.".format(user_id)
-            logging.error(msg)
-            raise ValueError(msg)
+            return list()
 
         return [int(s) for s in str(favourite.favourite).split(",")]
 
