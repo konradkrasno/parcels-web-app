@@ -5,17 +5,17 @@
 	<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
 	{% if user.is_authenticated %}
 		{% if advert.id in fav_id %}
-			<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+			<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='remove' path_name='advert_detail' %}">
 			    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
 			</a>
 		{% else %}
-			<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+			<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='add' path_name='advert_detail' %}">
 			    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
 			</a>
 		{% endif %}
-			<a class="btn btn-default" href="{% url 'parcels:advert_list_when_login' place=place price=price area=area user_id=user.id %}">Powrót do listy ogłoszeń</a>
+			<a class="btn btn-default" href="{% url 'parcels:advert_list' place=place price=price area=area user_id=user.id %}">Powrót do listy ogłoszeń</a>
 	{% else %}
-		<a class="btn btn-default" href="{% url 'parcels:advert_list_when_logout' place=place price=price area=area %}">Powrót do listy ogłoszeń</a>
+		<a class="btn btn-default" href="{% url 'parcels:advert_list' place=place price=price area=area user_id=0 %}">Powrót do listy ogłoszeń</a>
 	{% endif %}
 
 	<h1 class="posttitle">{{ advert.place }}</h1>

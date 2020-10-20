@@ -10,11 +10,29 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
+import logging
 import os
 import json
+import re
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 with open("secure.json", "r") as file:
     secure = json.load(file)
+
+
+MAIN_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))))))
+HOSTS_DIR = os.path.join(MAIN_DIR, 'etc/hosts')
+try:
+    with open(HOSTS_DIR) as f:
+        host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + '1'
+except FileNotFoundError:
+    host = '127.0.0.1'
+
+logging.info('Host: {}'.format(host))
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +48,7 @@ SECRET_KEY = 'l*fbo8ke8o+ilv5aw=**hwl&6m*1=yph_!uhbi9us(o1wq6yf)'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -81,9 +99,17 @@ WSGI_APPLICATION = 'parcels_web_app.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': host,
+        'PORT': '5432'
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    # }
 }
 
 
@@ -143,3 +169,16 @@ EMAIL_HOST_USER = secure['EMAIL_HOST_USER']
 EMAIL_HOST_PASSWORD = secure['EMAIL_HOST_PASSWORD']
 EMAIL_PORT = secure['EMAIL_PORT']
 DEFAULT_FROM_EMAIL = secure['EMAIL_HOST_USER']
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://" + host + ":6379/",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient"
+        }
+    }
+}
+
+# Cache time to live is 15 minutes.
+CACHE_TTL = 60 * 15
