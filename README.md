@@ -4,13 +4,16 @@ This is django web application with which you can look for building plots advert
 
 ## Design goals
 
-Main goal of this application is collect data from another services with advertisements and filter it with particular parameters.
+Main goal of this application is collect data from services with advertisements and filter it with particular parameters.
+
+Data is automatically scraped and loaded to database.
 
 Application have features such us:
 * saving filtered adverts
 * downloading csv file with favourite adverts
 * sending email with csv file with favourite adverts
 
+## Views
 #### Starting page
 ![start_page](https://user-images.githubusercontent.com/55924004/93318263-c82f6000-f80e-11ea-90ca-1c5e80032092.PNG)
 #### Searching page
@@ -22,51 +25,22 @@ Application have features such us:
 #### Favourite adverts list page
 ![favourites_page](https://user-images.githubusercontent.com/55924004/93318427-fa40c200-f80e-11ea-9af1-5c6d8a0c90d9.PNG)
 
-### Uploading data
+### Working of application
 
-Data is uploading to database from json file. Json file should be named adverts.json and looks like example below:
-```
-parcels-web-app/adverts.json
-[
-	{
-	"store_id": 1,
-	"place": "example_place",
-	"county": "example_county",
-	"price": "200000",
-	"price_per_m2": "200",
-	"area": "1000",
-	"link": "example_link",
-	"date_added": "14/09/2020",
-	"description": "example_description"
-	},
-	{
-	"store_id": 1,
-	"place": "example_place",
-	"county": "example_county",
-	"price": "400000",
-	"price_per_m2": "400",
-	"area": "1000",
-	"link": "example_link",
-	"date_added": "14/09/2020",
-	"description": "example_description"
-	}
-]
-
-```
-We can use scrapy to crawl data from popular services.
+Application consists of five services:
+* django - handles business logic
+* postgres - database service
+* redis - used for caching
+* crawler - service for scraping data from sites with advertisements and load scraped data to postres database
+ via Django API
+* task-manager - runs clawler in scheduled time
 
 ## Installation
 
 Clone the repository:
 ```bash
 git clone https://github.com/konradkrasno/parcels-web-app.git
-```
-Initialize virtual environment and install requirements:
-```bash
 cd parcels-web-app
-python3 -m venv env
-source env/bin/activate
-pip3 install -r requirements.txt
 ```
 To enjoy all features you have to create json file with information about email account which you will use to send messages to users. Name it secure.json:
 ```
@@ -78,16 +52,18 @@ parcels-web-app/secure.json
  "EMAIL_PORT": "your_email_port"
 }
 ```
-Don't forget about create adverts.json file (info about it above in Uploading data section).
 
-Make migrations and run django server:
+Initialize docker containers:
 ```bash
-python3 manage.py makemigrations parcels
-python3 manage.py migrate
-python3 manage.py runserver
+docker-compose up -d
 ```
 
-## Unit tests
+Get inside Django container to make migrations and run tests:
+```bash
+docker exec -it <django-container-name> bash
+python3 parcels-web-app/manage.py makemigrations parcels
+python3 parcels-web-app/manage.py migrate
+```
 
 To run unit tests write in command prompt:
 
