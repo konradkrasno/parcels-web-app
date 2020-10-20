@@ -40,7 +40,7 @@ def create_test_csv():
 
 @pytest.fixture
 def add_testing_data_to_db():
-    """Adds data for testing Django models to database."""
+    """Adds data to database."""
 
     for item in testing_data:
         Advert(**item).save()
@@ -56,21 +56,28 @@ def add_favourite():
 
 
 @pytest.fixture
-def client():
-    return Client()
+def user():
+    """ Creates fake user. """
 
-
-@pytest.fixture
-def logged_client():
-    client = Client()
     user = User.objects.create(username="test_user", email="test@gmail.com")
     user.set_password("password")
     user.save()
-    client.login(username="test_user", password="password")
 
+    user = User.objects.get(username="test_user")
+    return user
+
+
+@pytest.fixture
+def client():
+    """ Creates fake client. """
+
+    client = Client()
+    # if user fixture is used then client log in, otherwise not log in
+    client.login(username="test_user", password="password")
     return client
 
 
-@pytest.fixture()
+@pytest.fixture
 def factory():
+    """ Creates fake request. """
     return RequestFactory()

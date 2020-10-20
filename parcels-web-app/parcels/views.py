@@ -101,8 +101,7 @@ class AdvertListView(ListView):
         context["area"] = self.kwargs.get("area")
 
         if self.kwargs.get("user_id"):
-            favourite = Favourite()
-            fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
+            fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
             context["fav_id"] = fav_id
 
         return context
@@ -127,8 +126,7 @@ class AdvertDetailView(DetailView):
         context["area"] = self.kwargs.get("area")
 
         if self.kwargs.get("user_id"):
-            favourite = Favourite()
-            fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
+            fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
             context["fav_id"] = fav_id
 
         return context
@@ -148,10 +146,8 @@ class FavouriteListView(LoginRequiredMixin, ListView):
         if queryset is None:
             self.object_list = self.get_queryset()
 
-        favourite = Favourite()
-        fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-
         context = super().get_context_data(**kwargs)
+        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
         context["fav_id"] = fav_id
 
         return context
@@ -170,10 +166,8 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
         if queryset is None:
             self.object = self.get_queryset()
 
-        favourite = Favourite()
-        fav_id = favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-
         context = super().get_context_data(**kwargs)
+        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
         context["fav_id"] = fav_id
 
         return context
@@ -252,122 +246,35 @@ def user_logout(request) -> HttpResponseRedirect:
 
 
 @login_required
-def make_favourite(request, **kwargs) -> HttpResponseRedirect:
-    """ Adding advert to list of favourite in advert_detail view. """
+def handling_favourite(request, **kwargs) -> HttpResponseRedirect:
+    """ Handling adding or removing adverts from list of favourite. """
 
-    favourite = Favourite()
-    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
+    action = kwargs.pop("action")
+    path_name = kwargs.pop("path_name")
 
-    return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
+    adverts = [kwargs.get("pk")]
+    if not adverts[0]:
+        if action == "remove_all":
+            adverts = Favourite.get_favourite_ids(user_id=kwargs.get("user_id"))
+        else:
+            adverts = Advert.filter_adverts(
+                price=kwargs.get("price"),
+                place=kwargs.get("place"),
+                area=kwargs.get("area"),
+            )
 
+    if action == "add":
+        Favourite.create_or_update(user_id=kwargs.get("user_id"), adverts=adverts)
+    elif action in ["remove", "remove_all"]:
+        Favourite.remove_from_favourite(user_id=kwargs.get("user_id"), adverts=adverts)
 
-@login_required
-def make_favourite_list(request, **kwargs) -> HttpResponseRedirect:
-    """ Adding advert to list of favourite in advert_list view. """
+    if path_name in ["advert_list", "favourite_list"]:
+        try:
+            kwargs.pop("pk")
+        except KeyError:
+            pass
 
-    favourite = Favourite()
-    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
-
-    kwargs.pop("pk")
-
-    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
-
-
-@login_required
-def make_all_favourite(request, **kwargs) -> HttpResponseRedirect:
-    """ Adding all adverts to list of favourite in advert_list view. """
-
-    filtered_adverts = Advert.filter_adverts(
-        price=kwargs.get("price"), place=kwargs.get("place"), area=kwargs.get("area")
-    )
-
-    favourite = Favourite()
-    favourite.make_many_favourite(
-        user_id=kwargs.get("user_id"), adverts=filtered_adverts
-    )
-
-    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
-
-
-@login_required
-def make_favourite_from_favourites(request, **kwargs) -> HttpResponseRedirect:
-    """ Adding advert to list of favourite in favourite_detail view. """
-
-    favourite = Favourite()
-    favourite.create_or_update(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
-
-    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
-
-
-@login_required
-def remove_favourite(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting advert from list of favourite in advert_detail view. """
-
-    favourite = Favourite()
-    favourite.remove_from_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
-
-    return HttpResponseRedirect(reverse("parcels:advert_detail", kwargs=kwargs))
-
-
-@login_required
-def remove_favourite_list(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting advert from list of favourite in advert_list view. """
-
-    favourite = Favourite()
-    favourite.remove_from_favourite(pk=kwargs.get("pk"), user_id=kwargs.get("user_id"))
-
-    kwargs.pop("pk")
-
-    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
-
-
-@login_required
-def remove_all_favourite(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting all adverts from list of favourite in advert_list view. """
-
-    filtered_adverts = Advert.filter_adverts(
-        price=kwargs.get("price"), place=kwargs.get("place"), area=kwargs.get("area")
-    )
-
-    favourite = Favourite()
-    favourite.remove_from_favourite(
-        user_id=kwargs.get("user_id"), adverts=filtered_adverts
-    )
-
-    return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=kwargs))
-
-
-@login_required
-def remove_favourite_from_favourites(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting advert from list of favourite in favourite_detail view. """
-
-    favourite = Favourite()
-    favourite.remove_from_favourite(**kwargs)
-
-    return HttpResponseRedirect(reverse("parcels:favourite_detail", kwargs=kwargs))
-
-
-@login_required
-def remove_favourite_from_favourites_list(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting advert from list of favourite in favourite_list view. """
-
-    favourite = Favourite()
-    favourite.remove_from_favourite(**kwargs)
-
-    kwargs.pop("pk")
-
-    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=kwargs))
-
-
-@login_required
-def remove_all_favourite_from_favourites(request, **kwargs) -> HttpResponseRedirect:
-    """ Deleting all adverts from list of favourite in favourite_list view. """
-
-    favourite = Favourite()
-    fav_id = favourite.get_favourite_ids(user_id=kwargs.get("user_id"))
-    favourite.remove_from_favourite(user_id=kwargs.get("user_id"), adverts=fav_id)
-
-    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=kwargs))
+    return HttpResponseRedirect(reverse("parcels:{}".format(path_name), kwargs=kwargs))
 
 
 class Echo:
@@ -379,8 +286,7 @@ class Echo:
 
 
 def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
-    favourite = Favourite()
-    fav_id = favourite.get_favourite_ids(user_id=user_id)
+    fav_id = Favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
 
     rows = [
@@ -417,8 +323,7 @@ def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
 
 
 def sending_csv(request, user_id: int) -> HttpResponseRedirect:
-    favourite = Favourite()
-    fav_id = favourite.get_favourite_ids(user_id=user_id)
+    fav_id = Favourite.get_favourite_ids(user_id=user_id)
     favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
 
     rows = [

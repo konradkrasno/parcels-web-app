@@ -136,7 +136,10 @@ class Favourite(models.Model):
         except cls.DoesNotExist:
             return list()
 
-        return [int(s) for s in str(favourite.favourite).split(",")]
+        try:
+            return [int(s) for s in str(favourite.favourite).split(",")]
+        except ValueError:
+            return list()
 
     @classmethod
     def create_or_update(cls, user_id: int, adverts: Union[list, QuerySet]):

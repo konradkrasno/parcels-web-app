@@ -5,11 +5,11 @@
 	{% if advert_list %}	
 		{% if user.is_authenticated %}
 			{% if all_fav_added %}
-				<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite' place=place price=price area=area user_id=user.id %}">
+				<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite' place=place price=price area=area user_id=user.id action='remove' path_name='advert_list' %}">
 				    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
 				</a>
 			{% else %}
-				<a class="btn btn-default" href="{% url 'parcels:make_all_favourite' place=place price=price area=area user_id=user.id %}">
+				<a class="btn btn-default" href="{% url 'parcels:make_all_favourite' place=place price=price area=area user_id=user.id action='add' path_name='advert_list' %}">
 				    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj wszystkie do ulubionych
 				</a>
 			{% endif %}
@@ -30,11 +30,11 @@
 				<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
 			{% if user.is_authenticated %}
 				{% if advert.id in fav_id %}
-					<a class="btn btn-default" href="{% url 'parcels:remove_favourite_list' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+					<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='remove' path_name='advert_list' %}">
 					    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
 					</a>
 				{% else %}
-					<a class="btn btn-default" href="{% url 'parcels:make_favourite_list' place=place price=price area=area pk=advert.pk user_id=user.id %}">
+					<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='add' path_name='advert_list' %}">
 					    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
 					</a>
 				{% endif %}
