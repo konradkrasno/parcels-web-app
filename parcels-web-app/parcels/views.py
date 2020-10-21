@@ -33,7 +33,13 @@ from django.db.models import QuerySet
 import csv
 from io import StringIO
 
+from django.conf import settings
+from django.core.cache.backends.base import DEFAULT_TIMEOUT
+from django.core.cache import cache
+
 logging.basicConfig(level=logging.DEBUG)
+
+CACHE_TTL = getattr(settings, 'CACHE_TTL', DEFAULT_TIMEOUT)
 
 
 class UploadData(View):
@@ -83,12 +89,23 @@ class AdvertListView(ListView):
     model = Advert
 
     def get_queryset(self) -> QuerySet:
+        place = self.kwargs.get("place")
+        price = self.kwargs.get("price")
+        area = self.kwargs.get("area")
+
+        cache_key = "{}.{}.{}".format(place, price, area)
+        if cache_key in cache:
+            return cache.get(cache_key)
+
         queryset = super().get_queryset()
-        return queryset.filter(
-            place=self.kwargs.get("place"),
-            price__lte=self.kwargs.get("price"),
-            area__gte=self.kwargs.get("area"),
+        query = queryset.filter(
+            place=place,
+            price__lte=price,
+            area__gte=area,
         ).order_by("price")
+        cache.set(cache_key, query, timeout=CACHE_TTL)
+
+        return query
 
     def get_context_data(self, **kwargs) -> dict:
         queryset = kwargs.pop("object_list", None)
@@ -139,7 +156,16 @@ class FavouriteListView(LoginRequiredMixin, ListView):
     def get_queryset(self) -> QuerySet:
         queryset = super().get_queryset()
         fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-        return queryset.filter(pk__in=fav_id).order_by("place")
+
+        cache_key = Favourite.objects.get(user_id=self.kwargs.get("user_id")).favourite
+
+        if cache_key in cache:
+            return cache.get(cache_key)
+
+        query = queryset.filter(pk__in=fav_id).order_by("place")
+        cache.set(cache_key, query, timeout=CACHE_TTL)
+
+        return query
 
     def get_context_data(self, **kwargs) -> dict:
         queryset = kwargs.pop("object_list", None)
