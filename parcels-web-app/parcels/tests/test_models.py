@@ -145,10 +145,7 @@ class TestFavourite:
         adverts = Advert.objects.all()
         Favourite.create_or_update(user_id=1, adverts=adverts)
 
-        assert Favourite.objects.values("user_id", "favourite")[0] == {
-            "user_id": 1,
-            "favourite": "1,2",
-        }
+        assert len(Favourite.get_favourite_ids(user_id=1)) == 2
 
     def test_create_or_update_with_empty_list(self):
         Favourite.create_or_update(user_id=1, adverts=[])
