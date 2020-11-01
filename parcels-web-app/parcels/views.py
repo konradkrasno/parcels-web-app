@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 
 from django.shortcuts import render, reverse
 from django.contrib.sites.shortcuts import get_current_site
@@ -71,7 +72,7 @@ class SearchAdvertsView(View):
         form = self.form_class()
         return render(request, "parcels/advert_form.html", {"form": form})
 
-    def post(self, request, user_id: int):
+    def post(self, request, user_id: int) -> Union[HttpResponseRedirect, render]:
         form = self.form_class(request.POST)
 
         if form.is_valid():
@@ -199,7 +200,7 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-def register(request):
+def register(request) -> Union[HttpResponse, render]:
     if request.method == "POST":
         user_form = SignUp(data=request.POST)
         if user_form.is_valid():
@@ -236,7 +237,7 @@ def register(request):
     )
 
 
-def activate(request, uidb64, token):
+def activate(request, uidb64: str, token: str) -> Union[HttpResponse, HttpResponseRedirect]:
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
@@ -250,7 +251,7 @@ def activate(request, uidb64, token):
     return HttpResponse("Link aktywacyjny jest nieważny.")
 
 
-def user_login(request):
+def user_login(request) -> Union[HttpResponse, HttpResponseRedirect, render]:
     if request.method == "POST":
         username = request.POST["username"]
         password = request.POST["password"]
