@@ -350,19 +350,21 @@ class TestViews:
         assert response.status_code == 302
 
     def test_streaming_csv(self, add_testing_data_to_db, add_favourite, client):
-        response = client.post(
-                reverse("parcels:streaming_csv", kwargs={"user_id": 1})
-            )
+        response = client.post(reverse("parcels:streaming_csv", kwargs={"user_id": 1}))
 
         assert response.status_code == 200
-        assert response.get("Content-Disposition") == '''attachment; filename="your_adverts.csv"'''
+        assert (
+            response.get("Content-Disposition")
+            == '''attachment; filename="your_adverts.csv"'''
+        )
 
     def test_sending_csv(self, add_testing_data_to_db, add_favourite, user, client):
-        response = client.post(
-            reverse("parcels:sending_csv", kwargs={"user_id": 1})
-        )
+        response = client.post(reverse("parcels:sending_csv", kwargs={"user_id": 1}))
 
         assert response.status_code == 302
         assert len(mail.outbox) == 1
         assert mail.outbox[0].subject == "ParcelsScraper - wybrane działki"
-        assert mail.outbox[0].body == "W załączeniu przesyłamy wybrane przez Ciebie działki."
+        assert (
+            mail.outbox[0].body
+            == "W załączeniu przesyłamy wybrane przez Ciebie działki."
+        )

@@ -119,8 +119,8 @@ class AdvertListView(ListView):
         context["area"] = self.kwargs.get("area")
 
         if self.kwargs.get("user_id"):
-            fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-            context["fav_id"] = fav_id
+            adverts = Favourite.get_favourites(user_id=self.kwargs.get("user_id"))
+            context["adverts"] = adverts
 
         return context
 
@@ -144,8 +144,8 @@ class AdvertDetailView(DetailView):
         context["area"] = self.kwargs.get("area")
 
         if self.kwargs.get("user_id"):
-            fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-            context["fav_id"] = fav_id
+            adverts = Favourite.get_favourites(user_id=self.kwargs.get("user_id"))
+            context["adverts"] = adverts
 
         return context
 
@@ -156,14 +156,14 @@ class FavouriteListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self) -> QuerySet:
         queryset = super().get_queryset()
-        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
+        adverts = Favourite.get_favourites(user_id=self.kwargs.get("user_id"))
 
-        cache_key = Favourite.objects.get(user_id=self.kwargs.get("user_id")).favourite
+        cache_key = str(adverts)
 
         if cache_key in cache:
             return cache.get(cache_key)
 
-        query = queryset.filter(pk__in=fav_id).order_by("place")
+        query = queryset.filter(adverts=adverts).order_by("place")
         cache.set(cache_key, query, timeout=CACHE_TTL)
 
         return query
@@ -174,8 +174,8 @@ class FavouriteListView(LoginRequiredMixin, ListView):
             self.object_list = self.get_queryset()
 
         context = super().get_context_data(**kwargs)
-        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-        context["fav_id"] = fav_id
+        adverts = Favourite.get_favourites(user_id=self.kwargs.get("user_id"))
+        context["adverts"] = adverts
 
         return context
 
@@ -194,8 +194,8 @@ class FavouriteDetailView(LoginRequiredMixin, DetailView):
             self.object = self.get_queryset()
 
         context = super().get_context_data(**kwargs)
-        fav_id = Favourite.get_favourite_ids(user_id=self.kwargs.get("user_id"))
-        context["fav_id"] = fav_id
+        adverts = Favourite.get_favourites(user_id=self.kwargs.get("user_id"))
+        context["adverts"] = adverts
 
         return context
 
@@ -282,7 +282,7 @@ def handling_favourite(request, **kwargs) -> HttpResponseRedirect:
     adverts = [kwargs.get("pk")]
     if not adverts[0]:
         if action == "remove_all":
-            adverts = Favourite.get_favourite_ids(user_id=kwargs.get("user_id"))
+            adverts = Favourite.get_favourites(user_id=kwargs.get("user_id"))
         else:
             adverts = Advert.filter_adverts(
                 price=kwargs.get("price"),
@@ -291,7 +291,7 @@ def handling_favourite(request, **kwargs) -> HttpResponseRedirect:
             )
 
     if action == "add":
-        Favourite.create_or_update(user_id=kwargs.get("user_id"), adverts=adverts)
+        Favourite.add_to_favourite(user_id=kwargs.get("user_id"), adverts=adverts)
     elif action in ["remove", "remove_all"]:
         Favourite.remove_from_favourite(user_id=kwargs.get("user_id"), adverts=adverts)
 
@@ -313,8 +313,7 @@ class Echo:
 
 
 def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
-    fav_id = Favourite.get_favourite_ids(user_id=user_id)
-    favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
+    adverts = Favourite.get_favourites(user_id=user_id)
 
     rows = [
         [
@@ -327,7 +326,7 @@ def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
             "Data dodania",
         ]
     ]
-    for adv in favourite_list:
+    for adv in adverts:
         row = [
             adv.place,
             adv.county,
@@ -350,8 +349,7 @@ def streaming_csv(request, user_id: int) -> StreamingHttpResponse:
 
 
 def sending_csv(request, user_id: int) -> HttpResponseRedirect:
-    fav_id = Favourite.get_favourite_ids(user_id=user_id)
-    favourite_list = Advert.objects.filter(pk__in=fav_id).order_by("place")
+    adverts = Favourite.get_favourites(user_id=user_id)
 
     rows = [
         [
@@ -364,7 +362,7 @@ def sending_csv(request, user_id: int) -> HttpResponseRedirect:
             "Data dodania",
         ]
     ]
-    for adv in favourite_list:
+    for adv in adverts:
         row = [
             adv.place,
             adv.county,

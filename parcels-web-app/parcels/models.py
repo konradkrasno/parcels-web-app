@@ -1,22 +1,22 @@
+from typing import *
+
 import logging
 import os
-import re
 import pandas as pd
 import glob
 
-from django.core.validators import validate_comma_separated_integer_list
 from django.db import models, transaction
 
 from django.db.utils import ProgrammingError, IntegrityError
 from django.db.models import QuerySet
+from django.contrib.auth.models import User
 
-from typing import Union
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 class Advert(models.Model):
-    """ Model storing scraped adverts data. """
+    """ Stores scraped adverts data. """
 
     place = models.CharField(max_length=250, null=True)
     county = models.CharField(max_length=250, null=True)
@@ -27,14 +27,14 @@ class Advert(models.Model):
     date_added = models.CharField(max_length=50, null=True)
     description = models.TextField(null=True)
 
-    def __str__(self):
-        return "{}, price: {} PLN, area: {} PLN/m2".format(
+    def __repr__(self):
+        return "place: {}, price: {} PLN, area: {} PLN/m2".format(
             self.place, self.price, self.area
         )
 
     @classmethod
     def create(cls, item: list) -> None:
-        """ Creates Advert instance. """
+        """ Creates an Advert instance. """
         try:
             with transaction.atomic():
                 cls(
@@ -53,9 +53,9 @@ class Advert(models.Model):
     @classmethod
     def load_adverts(cls, catalog: str) -> None:
         """
-        Loads data from files and saves to database.
+        Loads data from files and saves to the database.
 
-        :param catalog: Catalog name in current working directory with files to added
+        :param catalog: Catalog name with files to be added.
         """
 
         path = os.path.join(os.getcwd(), catalog, "*.csv")
@@ -77,7 +77,7 @@ class Advert(models.Model):
 
     @classmethod
     def delete_duplicates(cls) -> None:
-        """ Deletes duplicates objects from database. """
+        """ Deletes duplicate objects from the database. """
 
         min_id_objects = cls.objects.values(
             "place", "price", "price_per_m2", "area"
@@ -103,76 +103,127 @@ class Advert(models.Model):
 
 
 class Favourite(models.Model):
-    """ Model storing information about adverts saved by user to favourite. """
+    """ Creates relationships between the user and its favourite adverts. """
 
-    user_id = models.IntegerField(unique=True)
-    favourite = models.CharField(
-        validators=[validate_comma_separated_integer_list], max_length=10000
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    adverts = models.ManyToManyField(Advert)
 
-    def __str__(self):
-        return "{}: {}".format(self.user_id, self.favourite)
+    def __repr__(self):
+        return "user: {}, adverts: {} PLN".format(
+            self.user, self.adverts
+        )
 
-    def add_to_favourite(self, pk: int) -> None:
-        """ Adds object pk to list of favourite. """
+    @staticmethod
+    def get_user(user_id: int) -> Union[User, None]:
+        """ Gets the user's instance from the database. If not exists returns None. """
 
-        if self.user_id:
-            if not self.favourite:
-                self.favourite = "{}".format(pk)
-            elif re.search("{}".format(pk), self.favourite) is None:
-                self.favourite = self.favourite + ",{}".format(pk)
-        else:
-            raise IntegrityError("No user id assigned to Favourite model instance.")
-
-    def delete_from_favourite(self, pk: int) -> None:
-        """ Deletes object pk from list of favourite. """
-
-        if re.search(",{0},".format(pk), self.favourite):
-            self.favourite = re.sub(",{0},".format(pk), ",", self.favourite)
-        else:
-            self.favourite = re.sub(",{0}$|^{0},|^{0}$".format(pk), "", self.favourite)
+        try:
+            return User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return None
 
     @classmethod
-    def get_favourite_ids(cls, user_id: int) -> list:
-        """ Gets list of favourite objects depended on user_id. """
-        try:
-            favourite = cls.objects.get(user_id=user_id)
-        except cls.DoesNotExist:
-            return list()
+    def get_or_create(cls, user: User):
+        """ Gets the instance from the database if it exists. Otherwise creates the new one. """
 
         try:
-            return [int(s) for s in str(favourite.favourite).split(",")]
-        except ValueError:
-            return list()
+            return cls.objects.get(user=user)
+        except cls.DoesNotExist:
+            cls(user=user).save()
+        return cls.objects.get(user=user)
 
     @classmethod
-    def create_or_update(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:
-        """ Creates Favourite instance when not exists or updates existing one. """
-        try:
-            favourite = cls.objects.get(user_id=user_id)
-        except cls.DoesNotExist:
-            favourite = cls(user_id=user_id)
+    def add_to_favourite(cls, user_id: int, adverts: list) -> None:
+        """ Adds the relationship between the user and advert. """
 
-        if type(adverts) == list:
-            for advert in adverts:
-                favourite.add_to_favourite(pk=advert)
-        else:
-            for advert in adverts:
-                favourite.add_to_favourite(pk=advert.pk)
-        favourite.save()
+        user = cls.get_user(user_id)
+        if user:
+            fav = cls.get_or_create(user)
+            fav.adverts.set(adverts)
+            fav.save()
 
     @classmethod
-    def remove_from_favourite(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:
-        """ Deletes list of objects pk from Favourite instance attribute. """
-        try:
-            favourite = cls.objects.get(user_id=user_id)
-        except cls.DoesNotExist:
-            pass
-        else:
-            if type(adverts) == list:
-                for advert in adverts:
-                    favourite.delete_from_favourite(pk=advert)
-            else:
-                for advert in adverts:
-                    favourite.delete_from_favourite(pk=advert.pk)
-            favourite.save()
+    def remove_from_favourite(cls, user_id: int, adverts: list) -> None:
+        """ Removes the relationship between the user and advert. """
+        pass
+
+    @classmethod
+    def get_favourites(cls, user_id: int) -> list:
+        """ Returns a list of user's favourites adverts. """
+        pass
+
+
+# class Favourite(models.Model):
+#     """ Model storing information about adverts saved by user to favourite. """
+#
+#     user_id = models.IntegerField(unique=True)
+#     favourite = models.CharField(
+#         validators=[validate_comma_separated_integer_list], max_length=10000
+#     )
+#
+#     def __str__(self):
+#         return "{}: {}".format(self.user_id, self.favourite)
+#
+#     def add_to_favourite(self, pk: int) -> None:
+#         """ Adds object pk to list of favourite. """
+#
+#         if self.user_id:
+#             if not self.favourite:
+#                 self.favourite = "{}".format(pk)
+#             elif re.search("{}".format(pk), self.favourite) is None:
+#                 self.favourite = self.favourite + ",{}".format(pk)
+#         else:
+#             raise IntegrityError("No user id assigned to Favourite model instance.")
+#
+#     def delete_from_favourite(self, pk: int) -> None:
+#         """ Deletes object pk from list of favourite. """
+#
+#         if re.search(",{0},".format(pk), self.favourite):
+#             self.favourite = re.sub(",{0},".format(pk), ",", self.favourite)
+#         else:
+#             self.favourite = re.sub(",{0}$|^{0},|^{0}$".format(pk), "", self.favourite)
+#
+#     @classmethod
+#     def get_favourite_ids(cls, user_id: int) -> list:
+#         """ Gets list of favourite objects depended on user_id. """
+#         try:
+#             favourite = cls.objects.get(user_id=user_id)
+#         except cls.DoesNotExist:
+#             return list()
+#
+#         try:
+#             return [int(s) for s in str(favourite.favourite).split(",")]
+#         except ValueError:
+#             return list()
+#
+#     @classmethod
+#     def create_or_update(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:
+#         """ Creates Favourite instance when not exists or updates existing one. """
+#         try:
+#             favourite = cls.objects.get(user_id=user_id)
+#         except cls.DoesNotExist:
+#             favourite = cls(user_id=user_id)
+#
+#         if type(adverts) == list:
+#             for advert in adverts:
+#                 favourite.add_to_favourite(pk=advert)
+#         else:
+#             for advert in adverts:
+#                 favourite.add_to_favourite(pk=advert.pk)
+#         favourite.save()
+#
+#     @classmethod
+#     def remove_from_favourite(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:
+#         """ Deletes list of objects pk from Favourite instance attribute. """
+#         try:
+#             favourite = cls.objects.get(user_id=user_id)
+#         except cls.DoesNotExist:
+#             pass
+#         else:
+#             if type(adverts) == list:
+#                 for advert in adverts:
+#                     favourite.delete_from_favourite(pk=advert)
+#             else:
+#                 for advert in adverts:
+#                     favourite.delete_from_favourite(pk=advert.pk)
+#             favourite.save()

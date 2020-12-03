@@ -6,7 +6,7 @@ from django.test import Client, RequestFactory
 from django.contrib.auth.models import User
 
 from parcels.tests.test_data import testing_data
-from parcels.models import Advert, Favourite
+from parcels.models import Advert
 
 TEST_DIR = "fixtures"
 
@@ -49,15 +49,13 @@ def add_testing_data_to_db():
 
 
 @pytest.fixture
-def add_favourite():
-    """ Creates favourite instance for testing Django views. """
-
-    Favourite.create_or_update(user_id=1, adverts=[1, 2])
+def test_adverts(add_testing_data_to_db) -> list:
+    return Advert.objects.all()
 
 
 @pytest.fixture
 def user():
-    """ Creates fake user. """
+    """ Provides fake user. """
 
     user = User.objects.create(username="test_user", email="test@gmail.com")
     user.set_password("password")
@@ -69,7 +67,7 @@ def user():
 
 @pytest.fixture
 def client():
-    """ Creates fake client. """
+    """ Provides fake client. """
 
     client = Client()
     # if user fixture is used then client log in, otherwise not log in
