@@ -7,7 +7,11 @@ app_name = "parcels"
 
 urlpatterns = [
     path("", views.Index.as_view(), name="index"),
-    path("upload_data/<str:catalog>", csrf_exempt(views.UploadData.as_view()), name="upload_data"),
+    path(
+        "upload_data/<str:catalog>",
+        csrf_exempt(views.UploadData.as_view()),
+        name="upload_data",
+    ),
     path("register", views.register, name="register"),
     path("activate/<uidb64>/<token>", views.activate, name="activate"),
     path("user_login", views.user_login, name="login"),

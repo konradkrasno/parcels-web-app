@@ -10,7 +10,8 @@ from parcels import views
 from parcels.tests.fixtures import (
     create_test_csv,
     add_testing_data_to_db,
-    add_favourite,
+    test_adverts,
+    add_favourites,
     user,
     client,
     factory,
@@ -78,65 +79,65 @@ class TestViews:
 
         assert response.status_code == 200
 
-    @pytest.mark.parametrize(
-        "path, kwargs, object_type, assertion, additional_context_key",
-        [
-            (
-                "advert_list",
-                {"place": "Dębe Wielkie", "price": 400000, "area": 800, "user_id": 1},
-                "object_list",
-                ["Dębe Wielkie"],
-                ["place", "price", "area"],
-            ),
-            (
-                "advert_detail",
-                {
-                    "place": "Dębe Wielkie",
-                    "price": 400000,
-                    "area": 800,
-                    "pk": 1,
-                    "user_id": 1,
-                },
-                "object",
-                "Dębe Wielkie",
-                ["place", "price", "area"],
-            ),
-            (
-                "favourite_list",
-                {"user_id": 1},
-                "object_list",
-                ["Dębe Wielkie", "Rysie"],
-                [],
-            ),
-            ("favourite_detail", {"pk": 1, "user_id": 1}, "object", "Dębe Wielkie", []),
-        ],
-    )
-    def test_advert_and_favourite_views(
-        self,
-        add_testing_data_to_db,
-        add_favourite,
-        user,
-        client,
-        path,
-        kwargs,
-        object_type,
-        assertion,
-        additional_context_key,
+    def test_advert_list_view(
+        self, add_testing_data_to_db, test_adverts, add_favourites, user, client
     ):
-        response = client.get(reverse("parcels:{}".format(path), kwargs=kwargs))
+        kwargs = {
+            "place": "Dębe Wielkie",
+            "price": 400000,
+            "area": 800,
+            "user_id": user.id,
+        }
+        response = client.get(reverse("parcels:advert_list", kwargs=kwargs))
         context = response.context_data
-        query = context[object_type]
+        query = context["object_list"]
 
-        try:
-            result = [value["place"] for value in query.values("place")]
-        except AttributeError:
-            result = query.place
-
-        assert result == assertion
-        assert context["fav_id"] == [1, 2]
-
-        for key in additional_context_key:
+        assert list(query.values_list("place")) == [("Dębe Wielkie",)]
+        assert list(context["adverts"]) == list(test_adverts)
+        for key in ["place", "price", "area"]:
             assert context.get(key) == str(kwargs.get(key))
+
+    def test_advert_detail_view(
+        self, add_testing_data_to_db, test_adverts, add_favourites, user, client
+    ):
+        kwargs = {
+            "place": "Dębe Wielkie",
+            "price": 400000,
+            "area": 800,
+        }
+        pk = Advert.filter_adverts(**kwargs)[0].id
+        kwargs["pk"] = pk
+        kwargs["user_id"] = user.id
+        response = client.get(reverse("parcels:advert_detail", kwargs=kwargs))
+        context = response.context_data
+        query = context["object"]
+
+        assert query.place == "Dębe Wielkie"
+        assert list(context["adverts"]) == list(test_adverts)
+        for key in ["place", "price", "area"]:
+            assert context.get(key) == str(kwargs.get(key))
+
+    def test_favourite_list_view(
+        self, add_testing_data_to_db, test_adverts, add_favourites, user, client
+    ):
+        kwargs = {"user_id": user.id}
+        response = client.get(reverse("parcels:favourite_list", kwargs=kwargs))
+        context = response.context_data
+        query = context["object_list"]
+
+        assert list(query.values_list("place")) == [("Dębe Wielkie",), ("Rysie",)]
+        assert list(context["adverts"]) == list(test_adverts)
+
+    def test_favourite_detail_view(
+        self, add_testing_data_to_db, test_adverts, add_favourites, user, client
+    ):
+        kwargs = {"pk": test_adverts[0].id, "user_id": user.id}
+        response = client.get(reverse("parcels:favourite_detail", kwargs=kwargs))
+        context = response.context_data
+        query = context["object"]
+
+        assert query.place == "Dębe Wielkie"
+        assert list(context["adverts"]) == list(test_adverts)
 
     def test_register_when_form_valid(self, client):
         valid_data = {
@@ -218,151 +219,172 @@ class TestViews:
                     "place": "Dębe Wielkie",
                     "price": 400000,
                     "area": 800,
-                    "pk": 100,
-                    "user_id": 1,
                     "action": "add",
                     "path_name": "advert_detail",
                 },
                 "make_favourite",
-                "1,2,100",
+                [("Dębe Wielkie",)],
             ),
             (
                 {
                     "place": "Dębe Wielkie",
                     "price": 400000,
                     "area": 800,
-                    "pk": 100,
-                    "user_id": 1,
                     "action": "add",
                     "path_name": "advert_list",
                 },
                 "make_favourite",
-                "1,2,100",
+                [("Dębe Wielkie",)],
             ),
             (
                 {
                     "place": "Rysie",
                     "price": 400000,
                     "area": 800,
-                    "user_id": 1,
                     "action": "add",
                     "path_name": "advert_list",
                 },
                 "make_all_favourite",
-                "1,2",
+                [("Rysie",)],
             ),
             (
                 {
-                    "pk": 100,
-                    "user_id": 1,
                     "action": "add",
                     "path_name": "favourite_detail",
                 },
                 "make_favourite_from_favourites",
-                "1,2,100",
-            ),
-            (
-                {
-                    "place": "Dębe Wielkie",
-                    "price": 400000,
-                    "area": 800,
-                    "pk": 1,
-                    "user_id": 1,
-                    "action": "remove",
-                    "path_name": "advert_detail",
-                },
-                "remove_favourite",
-                "2",
-            ),
-            (
-                {
-                    "place": "Dębe Wielkie",
-                    "price": 400000,
-                    "area": 800,
-                    "pk": 1,
-                    "user_id": 1,
-                    "action": "remove",
-                    "path_name": "advert_list",
-                },
-                "remove_favourite",
-                "2",
-            ),
-            (
-                {
-                    "place": "Rysie",
-                    "price": 400000,
-                    "area": 800,
-                    "user_id": 1,
-                    "action": "remove",
-                    "path_name": "advert_list",
-                },
-                "remove_all_favourite",
-                "1",
-            ),
-            (
-                {
-                    "pk": 1,
-                    "user_id": 1,
-                    "action": "remove",
-                    "path_name": "favourite_detail",
-                },
-                "remove_favourite_from_favourites",
-                "2",
-            ),
-            (
-                {
-                    "pk": 1,
-                    "user_id": 1,
-                    "action": "remove",
-                    "path_name": "favourite_list",
-                },
-                "remove_favourite_from_favourites",
-                "2",
-            ),
-            (
-                {
-                    "user_id": 1,
-                    "action": "remove_all",
-                    "path_name": "favourite_list",
-                },
-                "remove_all_favourite_from_favourites",
-                "",
+                [("Dębe Wielkie",)],
             ),
         ],
     )
-    def test_handling_favourite(
+    def test_handling_favourite_adding(
         self,
         add_testing_data_to_db,
-        add_favourite,
         user,
         factory,
         test_item,
         reverse_path,
         assertion,
     ):
+        pk = Advert.objects.get(place="Dębe Wielkie").id
+        if reverse_path != "make_all_favourite":
+            test_item["pk"] = pk
+        test_item["user_id"] = user.id
         request = factory.post(
             reverse("parcels:{}".format(reverse_path), kwargs=test_item)
         )
         request.user = user
         response = views.handling_favourite(request=request, **test_item)
 
-        assert Favourite.objects.get(user_id=1).favourite == assertion
+        assert list(Favourite.get_favourites(user.id).values_list("place")) == assertion
         assert response.status_code == 302
 
-    def test_streaming_csv(self, add_testing_data_to_db, add_favourite, client):
-        response = client.post(
-                reverse("parcels:streaming_csv", kwargs={"user_id": 1})
-            )
+    @pytest.mark.parametrize(
+        "test_item, reverse_path, assertion",
+        [
+            (
+                {
+                    "place": "Dębe Wielkie",
+                    "price": 400000,
+                    "area": 800,
+                    "action": "remove",
+                    "path_name": "advert_detail",
+                },
+                "remove_favourite",
+                [("Rysie",)],
+            ),
+            (
+                {
+                    "place": "Dębe Wielkie",
+                    "price": 400000,
+                    "area": 800,
+                    "action": "remove",
+                    "path_name": "advert_list",
+                },
+                "remove_favourite",
+                [("Rysie",)],
+            ),
+            (
+                {
+                    "place": "Rysie",
+                    "price": 400000,
+                    "area": 800,
+                    "action": "remove",
+                    "path_name": "advert_list",
+                },
+                "remove_all_favourite",
+                [("Dębe Wielkie",)],
+            ),
+            (
+                {
+                    "action": "remove",
+                    "path_name": "favourite_detail",
+                },
+                "remove_favourite_from_favourites",
+                [("Rysie",)],
+            ),
+            (
+                {
+                    "action": "remove",
+                    "path_name": "favourite_list",
+                },
+                "remove_favourite_from_favourites",
+                [("Rysie",)],
+            ),
+            (
+                {
+                    "action": "remove_all",
+                    "path_name": "favourite_list",
+                },
+                "remove_all_favourite_from_favourites",
+                [],
+            ),
+        ],
+    )
+    def test_handling_favourite_removing(
+        self,
+        add_testing_data_to_db,
+        add_favourites,
+        user,
+        factory,
+        test_item,
+        reverse_path,
+        assertion,
+    ):
+        pk = Advert.objects.get(place="Dębe Wielkie").id
+        if reverse_path not in [
+            "remove_all_favourite",
+            "remove_all_favourite_from_favourites",
+        ]:
+            test_item["pk"] = pk
+        test_item["user_id"] = user.id
+        request = factory.post(
+            reverse("parcels:{}".format(reverse_path), kwargs=test_item)
+        )
+        request.user = user
+        response = views.handling_favourite(request=request, **test_item)
+
+        assert list(Favourite.get_favourites(user.id).values_list("place")) == assertion
+        assert response.status_code == 302
+
+    def test_streaming_csv(self, add_testing_data_to_db, add_favourites, client):
+        response = client.post(reverse("parcels:streaming_csv", kwargs={"user_id": 1}))
 
         assert response.status_code == 200
-        assert response.get("Content-Disposition") == '''attachment; filename="your_adverts.csv"'''
+        assert (
+            response.get("Content-Disposition")
+            == '''attachment; filename="your_adverts.csv"'''
+        )
 
-    def test_sending_csv(self, add_testing_data_to_db, add_favourite, user, client):
+    def test_sending_csv(self, add_testing_data_to_db, add_favourites, user, client):
         response = client.post(
-            reverse("parcels:sending_csv", kwargs={"user_id": 1})
+            reverse("parcels:sending_csv", kwargs={"user_id": user.id})
         )
 
         assert response.status_code == 302
         assert len(mail.outbox) == 1
         assert mail.outbox[0].subject == "ParcelsScraper - wybrane działki"
-        assert mail.outbox[0].body == "W załączeniu przesyłamy wybrane przez Ciebie działki."
+        assert (
+            mail.outbox[0].body
+            == "W załączeniu przesyłamy wybrane przez Ciebie działki."
+        )

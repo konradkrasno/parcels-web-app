@@ -44,32 +44,33 @@ def add_testing_data_to_db():
 
     for item in testing_data:
         Advert(**item).save()
-
     Advert.delete_duplicates()
 
 
 @pytest.fixture
-def add_favourite():
-    """ Creates favourite instance for testing Django views. """
-
-    Favourite.create_or_update(user_id=1, adverts=[1, 2])
+def test_adverts(add_testing_data_to_db) -> list:
+    return Advert.objects.all()
 
 
 @pytest.fixture
 def user():
-    """ Creates fake user. """
+    """ Provides fake user. """
 
     user = User.objects.create(username="test_user", email="test@gmail.com")
     user.set_password("password")
     user.save()
-
     user = User.objects.get(username="test_user")
     return user
 
 
 @pytest.fixture
+def add_favourites(user, test_adverts):
+    Favourite.add_to_favourite(user_id=user.id, adverts=test_adverts)
+
+
+@pytest.fixture
 def client():
-    """ Creates fake client. """
+    """ Provides fake client. """
 
     client = Client()
     # if user fixture is used then client log in, otherwise not log in

@@ -15,10 +15,9 @@ Application have features such us:
 
 ### Working of application
 
-Application consists of five services:
+Application consists of four services:
 * django - handles business logic
-* postgres - database service
-* redis - used for caching
+* postgres - the database service
 * crawler - service for scraping data from sites with advertisements and load scraped data to postres database
  via Django API
 * task-manager - runs clawler in scheduled time
@@ -42,10 +41,11 @@ Clone the repository:
 git clone https://github.com/konradkrasno/parcels-web-app.git
 cd parcels-web-app
 ```
-To enjoy all features you have to create json file with information about email account which you will use to send messages to users. Name it secure.json:
+To run the application and enjoy all features you have to create json file with django secret key and information about email account which you will use to send messages to users. Name it secure.json:
 ```
 parcels-web-app/secure.json
 {
+ "SECRET_KEY": "django_server_key",
  "EMAIL_HOST": "your_email_host", 
  "EMAIL_HOST_USER": "your_email_address", 
  "EMAIL_HOST_PASSWORD": "your_email_password", 

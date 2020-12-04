@@ -4,7 +4,7 @@
 <div class="container">
 	<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
 	{% if user.is_authenticated %}
-	{% if advert.id in fav_id %}
+	{% if advert in adverts %}
 	<a class="btn btn-default" href="{% url 'parcels:remove_favourite_from_favourites' pk=advert.pk user_id=user.id action='remove' path_name='favourite_detail' %}">
 	    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
 	</a>
