@@ -6,7 +6,7 @@ from django.test import Client, RequestFactory
 from django.contrib.auth.models import User
 
 from parcels.tests.test_data import testing_data
-from parcels.models import Advert
+from parcels.models import Advert, Favourite
 
 TEST_DIR = "fixtures"
 
@@ -44,7 +44,6 @@ def add_testing_data_to_db():
 
     for item in testing_data:
         Advert(**item).save()
-
     Advert.delete_duplicates()
 
 
@@ -60,9 +59,13 @@ def user():
     user = User.objects.create(username="test_user", email="test@gmail.com")
     user.set_password("password")
     user.save()
-
     user = User.objects.get(username="test_user")
     return user
+
+
+@pytest.fixture
+def add_favourites(user, test_adverts):
+    Favourite.add_to_favourite(user_id=user.id, adverts=test_adverts)
 
 
 @pytest.fixture

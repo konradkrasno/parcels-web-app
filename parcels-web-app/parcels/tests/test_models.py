@@ -9,6 +9,7 @@ from parcels.tests.fixtures import (
     TEST_DIR,
     user,
     test_adverts,
+    add_favourites,
 )
 
 
@@ -36,6 +37,9 @@ class TestAdvert:
         expected_data = ["Dębe Wielkie", "Rysie"]
         assert actual_data == expected_data
 
+    def test_get_adverts_when_advert_do_not_exist(self):
+        assert not Advert.get_advert(500)
+
     def test_filter_adverts(self, add_testing_data_to_db):
         assert (
             Advert.filter_adverts(place="Dębe Wielkie", price=400000, area=800).values(
@@ -57,10 +61,6 @@ class TestFavourite:
     """ Class for testing Favourite model and its methods. """
 
     pytestmark = pytest.mark.django_db
-
-    @pytest.fixture
-    def add_favourites(self, user, test_adverts):
-        Favourite.add_to_favourite(user_id=user.id, adverts=test_adverts)
 
     def test_add_to_favourite(self, user, test_adverts):
         Favourite.add_to_favourite(user_id=user.id, adverts=test_adverts)
@@ -100,7 +100,9 @@ class TestFavourite:
         assert list(result_adverts) == list(expected_adverts)
         assert len(result_adverts) == 2
 
-    def test_remove_from_favourite_when_object_not_in_favourites(self, user, test_adverts):
+    def test_remove_from_favourite_when_object_not_in_favourites(
+        self, user, test_adverts
+    ):
         advert = Advert.objects.filter(place="Dębe Wielkie")
         Favourite.remove_from_favourite(user_id=user.id, adverts=advert)
         result_adverts = Favourite.objects.select_related("adverts").values_list(

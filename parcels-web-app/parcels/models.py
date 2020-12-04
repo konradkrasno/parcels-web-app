@@ -45,7 +45,7 @@ class Advert(models.Model):
                     area=item[4],
                     link=item[5],
                     date_added=item[6],
-                    description=item[7]
+                    description=item[7],
                 ).save()
         except ValueError as e:
             logging.error(e)
@@ -69,7 +69,9 @@ class Advert(models.Model):
                     for item in adv.values:
                         cls.create(item)
                 except ProgrammingError:
-                    raise ProgrammingError("You have to make migrations before add data to database.")
+                    raise ProgrammingError(
+                        "You have to make migrations before add data to database."
+                    )
         else:
             raise FileNotFoundError("No files to added.")
 
@@ -93,13 +95,18 @@ class Advert(models.Model):
         )
 
     @classmethod
+    def get_advert(cls, _id: int):
+        return cls.objects.filter(id=_id)
+
+    @classmethod
     def filter_adverts(cls, place: str, price: int, area: int) -> QuerySet:
         """ Returns objects filtered by place, price and area ordered by price. """
 
-        return cls.objects.filter(place=place,
-                                  price__lte=price,
-                                  area__gte=area,
-                                  ).order_by('price')
+        return cls.objects.filter(
+            place=place,
+            price__lte=price,
+            area__gte=area,
+        ).order_by("price")
 
 
 class Favourite(models.Model):
@@ -109,9 +116,7 @@ class Favourite(models.Model):
     adverts = models.ManyToManyField(Advert)
 
     def __repr__(self):
-        return "user: {}, adverts: {} PLN".format(
-            self.user, self.adverts
-        )
+        return "user: {}, adverts: {} PLN".format(self.user, self.adverts)
 
     @staticmethod
     def get_user(user_id: int) -> Union[User, None]:
@@ -139,11 +144,13 @@ class Favourite(models.Model):
         user = cls.get_user(user_id)
         if user:
             fav = cls.get_or_create(user)
-            fav.adverts.set(adverts)
+            [fav.adverts.add(advert) for advert in adverts]
             fav.save()
 
     @classmethod
-    def remove_from_favourite(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:
+    def remove_from_favourite(
+        cls, user_id: int, adverts: Union[list, QuerySet]
+    ) -> None:
         """ Removes the relationship between the user and advert. """
 
         try:
