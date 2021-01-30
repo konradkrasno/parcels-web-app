@@ -22,16 +22,7 @@ Application consists of four services:
  via Django API
 * task-manager - runs clawler in scheduled time
 
-### Views
-#### Starting page
-![start_page](https://user-images.githubusercontent.com/55924004/93318263-c82f6000-f80e-11ea-90ca-1c5e80032092.PNG)
-#### Searching page
-![searching_page](https://user-images.githubusercontent.com/55924004/93318350-e1381100-f80e-11ea-8997-56673966370f.PNG)
-#### Register page
-![register_page](https://user-images.githubusercontent.com/55924004/93318376-e7c68880-f80e-11ea-872c-849a33dba0b4.PNG)
-#### Login page
-![login_page](https://user-images.githubusercontent.com/55924004/93318384-e9904c00-f80e-11ea-8b39-c3084eca20ba.PNG)
-#### Favourite adverts list page
+### Example View
 ![favourites_page](https://user-images.githubusercontent.com/55924004/93318427-fa40c200-f80e-11ea-9af1-5c6d8a0c90d9.PNG)
 
 ### Installation
