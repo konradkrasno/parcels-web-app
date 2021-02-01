@@ -1,55 +1,106 @@
-<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="utf-8">
-	<title>Parcels</title>
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.79.0">
+    <title>Parcels Scraper</title>
 
-	<!-- Bootstrap -->
-	<!-- Latest compiled and minified CSS -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/starter-template/">
 
-	<!-- Optional theme -->
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Bootstrap core CSS -->
+    {% load static %}
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
 
-</head>
-<body>
-<div class="container">
-	<div class="jumbotron">
-		<nav class="navbar navbar-default">
-			<ul class="nav navbar-nav">
-				<li><a class="navbar-brand" href="{% url 'parcels:index' %}">Home</a></li>
-			</ul>
-			<ul class="nav navbar-nav navbar-right">
-				{% if user.is_authenticated %}
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
 
-	        		<li><a href="{% url 'parcels:favourite_list' user_id=user.id %}">Ulubione</a></li>
-	        		<li><a>Witaj: {{ user.username }}</a></li>
-	        		<li><a href="{% url 'parcels:logout' %}">Wyloguj</a></li>
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
 
-				{% else %}
+    <!-- Custom styles for this template -->
+    {% load static %}
+    <link href="{% static 'css/starter-template.css' %}" rel="stylesheet">
+  </head>
+  <body>
 
-	        		<li><a href="{% url 'parcels:login' %}">Zaloguj</a></li>
-	        		<li><a href="{% url 'parcels:register' %}">Zarejestruj</a></li>
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Parcels</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-	        	{% endif %}
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page" href="{% url 'parcels:index' %}">Home</a>
+        </li>
+        {% if user.is_authenticated %}
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page" href="{% url 'parcels:favourite_list' %}">Zapisane</a>
+        </li>
+        {% endif %}
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item dropdown">-->
+<!--          <a class="nav-link dropdown-toggle" href="#" id="dropdown01" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>-->
+<!--          <ul class="dropdown-menu" aria-labelledby="dropdown01">-->
+<!--            <li><a class="dropdown-item" href="#">Action</a></li>-->
+<!--            <li><a class="dropdown-item" href="#">Another action</a></li>-->
+<!--            <li><a class="dropdown-item" href="#">Something else here</a></li>-->
+<!--          </ul>-->
+<!--        </li>-->
+<!--      </ul>-->
+<!--      <ul class="navbar-nav me-auto mb-2 mb-md-0">-->
+      </ul>
+      <ul class="navbar-nav ml-auto mb-2 mb-md-0">
+        {% if user.is_authenticated %}
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page">Witaj: {{ user.username }}</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page" href="{% url 'parcels:logout' %}">Wyloguj</a>
+        </li>
+        {% else %}
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page" href="{% url 'parcels:register' %}">Zarejestruj</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" aria-current="page" href="{% url 'parcels:login' %}">Zaloguj</a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
 
-        	</ul>
-		</nav>
-			<h1>Parcels Scraper</h1>
-			<p>Aplikacja służy do szukania działek budowlanych najlepiej odpowiadających Twoim oczekiwaniom.</p>
-		</div>
+<main class="container">
 
-	</div>
-<div class="container">
-	<div class="row">
-		<div class="col-md-8">
-			<div class="blog_posts">
-				{% block content %}
-				{% endblock %}
-			</div>
-		</div>
-	</div>
-</div>
+  <div class="starter-template text-center py-5 px-3">
+    <h1>Parcels Scraper</h1>
+    <p class="lead">Aplikacja służy do szukania działek budowlanych najlepiej odpowiadających Twoim oczekiwaniom.</p>
+  </div>
+  {% block content %}
+  {% endblock %}
 
-</body>
+</main>
+
+    {% load static %}
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+  </body>
 </html>

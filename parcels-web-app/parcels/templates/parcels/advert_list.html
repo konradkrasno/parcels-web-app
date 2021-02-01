@@ -1,52 +1,96 @@
 {% extends "parcels/base.html" %}
+
 {% block content %}
+<main>
+    {% if advert_list %}
 
-<div>
-	{% if advert_list %}	
-		{% if user.is_authenticated %}
-			{% if all_fav_added %}
-				<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite' place=place price=price area=area user_id=user.id action='remove' path_name='advert_list' %}">
-				    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
-				</a>
-			{% else %}
-				<a class="btn btn-default" href="{% url 'parcels:make_all_favourite' place=place price=price area=area user_id=user.id action='add' path_name='advert_list' %}">
-				    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj wszystkie do ulubionych
-				</a>
-			{% endif %}
-		{% endif %}
+    <form class="d-flex">
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
 
-		<h2>Wyniki wyszukiwania: </h2>
+    <br>
+    <div class="btn-group">
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <a class="btn btn-sm" href="#">
+            <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Zapisz wszystkie
+        </a>
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <a class="btn btn-sm" href="#">
+            <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie
+        </a>
+      </button>
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <a class="btn btn-sm" href="{% url 'parcels:streaming_csv' %}">Pobierz jako plik csv</a>
+      </button>
+      {% if user.is_authenticated %}
+      <button type="button" class="btn btn-sm btn-outline-secondary">
+        <a class="btn btn-sm" href="{% url 'parcels:sending_csv' %}">Wyślij email z plikiem csv</a>
+      </button>
+      {% endif %}
+    </div>
 
-		{% for advert in advert_list %}
-		<div class="post">
-			{% if user.is_authenticated %}
-				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
-			{% else %}
-				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=0 %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
-			{% endif %}
-				<h3>{{ advert.price }} PLN</h3>
-				<h3>{{ advert.price_per_m2 }} PLN/m2</h3>
+  <div class="album py-5 bg-light">
+    <div class="container">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
 
-				<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
-			{% if user.is_authenticated %}
-				{% if advert in adverts %}
-					<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='remove' path_name='advert_list' %}">
-					    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
-					</a>
-				{% else %}
-					<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='add' path_name='advert_list' %}">
-					    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
-					</a>
-				{% endif %}
-			{% endif %}
+      {% for advert in advert_list %}
+        <div class="col">
+          <div class="card shadow-sm">
+            <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><image href="https://img3.staticmorizon.com.pl/thumbnail/aHR0cDovL21lZGlhLmRvbXkucGwvaW1nL3pkamVjaWEvc2NpYW55LzUvc2NpYW55X3pzXzY1MjYlMjUyRjMwOTglMjUyRk9HU18xLmpwZyN2PTFfMTkzNzQ5OTE4Mw==/1664/936/2/dzialka-na-sprzedaz-dluga-szlachecka-1464-m-morizon-pl-7986.jpg" height="100%" width="100%"/></svg>
 
-		</div>
-		{% endfor %}
+            <div class="card-body">
+              <h5  class="card-text">{{ advert.place }}</h5>
+              <h6  class="card-text">{{ advert.price }} PLN</h6>
+              <h6  class="card-text">{{ advert.area }} m2</h6>
+              <h6  class="card-text">{{ advert.price_per_m2 }} PLN/m2</h6>
+              <p class="card-text" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">{{ advert.description }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary">
+                    <a class="btn btn-sm" href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk %}">View</a>
+                  </button>
+                  {% if user.is_authenticated %}
+                      {% if advert in saved_adverts %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                          <a class="btn btn-sm" href="#">
+                              <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+                            Usuń</a>
+                        </button>
+                      {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                          <a class="btn btn-sm" href="#">
+                              <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+                            Zapisz</a>
+                        </button>
+                      {% endif %}
+                  {% endif %}
+                </div>
+                <small class="text-muted">{{ advert.date_added }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+          <h2>Brak wyników wyszukiwania.</h2>
+        {% endif %}
 
-	{% else %}
-		<h2>Brak wyników wyszukiwania, spróbuj jeszcze raz.</h2>
-	{% endif %}
+      </div>
+    </div>
+  </div>
 
-</div>
+</main>
+
+<footer class="text-muted py-5">
+  <div class="container">
+    <p class="float-end mb-1">
+      <a href="#">Back to top</a>
+    </p>
+    <p class="mb-1">Created by konradkrasno</p>
+    <p class="mb-0">To see more projects, visit my <a href="https://github.com/konradkrasno">GitHub</a> page.</p>
+  </div>
+</footer>
 
 {% endblock %}

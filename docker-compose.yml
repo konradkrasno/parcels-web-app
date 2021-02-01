@@ -1,40 +1,50 @@
 version: '3.7'
 
 services:
-  task-manager:
-    image: funkyfuture/deck-chores:1
-    restart: unless-stopped
-    environment:
-      TIMEZONE: Europe/Warsaw
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  crawler:
-    build:
-      context: ./adverts_crawler
-      dockerfile: Dockerfile
-    volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app
-    command: tail -f /dev/null
-    labels:
-      deck-chores.crawl.command: python3 ./adverts_crawler/run_spider.py
-      deck-chores.crawl.interval: daily
-
-  django:
-    build:
-      context: ./parcels-web-app
-      dockerfile: Dockerfile
+  redis:
+    hostname: redis
+    image: redis
+    container_name: redis
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app
+      - "6379:6379"
 
   postgres:
+    hostname: postgres
     image: postgres
+    container_name: postgres
     restart: always
     ports:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: password
+
+  worker:
+    build:
+      context: ./parcels-web-app
+      dockerfile: Dockerfile
+    container_name: worker
+    links:
+      - redis
+    depends_on:
+      - redis
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+#    command: celery -A app.app_tasks.tasks.celery worker -l info
+
+  web:
+    build:
+      context: ./parcels-web-app
+      dockerfile: Dockerfile
+    container_name: web
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - "./parcels-web-app/.env"
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: ./parcels-web-app/boot.sh

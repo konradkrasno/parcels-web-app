@@ -1,16 +1,13 @@
-from typing import *
-
+import glob
 import logging
 import os
+from typing import *
+
 import pandas as pd
-import glob
-
-from django.db import models, transaction
-
-from django.db.utils import ProgrammingError
-from django.db.models import QuerySet
 from django.contrib.auth.models import User
-
+from django.db import models, transaction
+from django.db.models import QuerySet
+from django.db.utils import ProgrammingError
 
 logging.basicConfig(level=logging.DEBUG)
 
