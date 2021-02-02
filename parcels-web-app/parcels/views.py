@@ -122,8 +122,8 @@ class Index(View):
     def post(self, request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
         form = self.form_class(request.POST)
         if form.is_valid():
-            context = form.cleaned_data
-            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
+            self.request.session.update(form.cleaned_data)
+            return HttpResponseRedirect(reverse("parcels:advert_list"))
         form = AdvertForm()
         return render(request, "parcels/advert_form.html", {"form": form})
 
@@ -133,46 +133,15 @@ class AdvertListView(ListView):
     model = Advert
 
     def get_queryset(self) -> QuerySet:
-        place = self.kwargs.get("place")
-        price = self.kwargs.get("price")
-        area = self.kwargs.get("area")
+        place = self.request.session.get("place")
+        price = self.request.session.get("price")
+        area = self.request.session.get("area")
         queryset = Advert.filter_adverts(place, price, area)
         return queryset
 
-    def get_context_data(self, **kwargs) -> dict:
-        queryset = kwargs.pop("object_list", None)
-        if queryset is None:
-            self.object_list = self.get_queryset()
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["place"] = self.kwargs.get("place")
-        context["price"] = self.kwargs.get("price")
-        context["area"] = self.kwargs.get("area")
-        if self.request.user:
-            context["saved_adverts"] = Favourite.get_favourites(
-                user_id=self.request.user.id
-            )
-        return context
-
-
-class AdvertDetailView(DetailView):
-    template_name = "parcels/advert_detail.html"
-    model = Advert
-
-    def get_queryset(self) -> QuerySet:
-        return Advert.get_advert(self.kwargs.get("pk"))
-
-    def get_context_data(self, **kwargs) -> dict:
-        queryset = kwargs.pop("object", None)
-        if queryset is None:
-            self.object = self.get_queryset()
-        context = super().get_context_data(**kwargs)
-        context["place"] = self.kwargs.get("place")
-        context["price"] = self.kwargs.get("price")
-        context["area"] = self.kwargs.get("area")
-        if self.request.user:
-            context["saved_adverts"] = Favourite.get_favourites(
-                user_id=self.request.user.id
-            )
+        self.request.session["view_name"] = "adverts"
         return context
 
 
@@ -183,82 +152,67 @@ class FavouriteListView(LoginRequiredMixin, ListView):
     def get_queryset(self) -> QuerySet:
         return Favourite.get_favourites(user_id=self.request.user.id)
 
-    def get_context_data(self, **kwargs) -> dict:
-        queryset = kwargs.pop("object_list", None)
-        if queryset is None:
-            self.object_list = self.get_queryset()
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["place"] = self.kwargs.get("place")
-        context["price"] = self.kwargs.get("price")
-        context["area"] = self.kwargs.get("area")
-        context["saved_adverts"] = Favourite.get_favourites(
-            user_id=self.request.user.id
-        )
+        self.request.session["view_name"] = "favourites"
         return context
 
 
+class AdvertDetailView(DetailView):
+    template_name = "parcels/advert_detail.html"
+    model = Advert
+
+    def get_queryset(self) -> QuerySet:
+        return Advert.get_advert(self.kwargs.get("pk"))
+
+
 @login_required
-def save_advert(request: WSGIRequest, **kwargs) -> HttpResponseRedirect:
+def save_advert(request: WSGIRequest, pk: int) -> HttpResponse:
     """ Add advert to favourites adverts. """
 
+    advert = Advert.get_advert(_id=pk)
+    Favourite.add_to_favourite(user_id=request.user.id, adverts=advert)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    # return HttpResponse("<script>history.back();</script>")
 
 
 @login_required
-def delete_advert(request: WSGIRequest, **kwargs) -> HttpResponseRedirect:
+def delete_advert(request: WSGIRequest, pk: int) -> HttpResponse:
     """ Delete advert from favourites adverts. """
 
+    advert = Advert.get_advert(_id=pk)
+    Favourite.remove_from_favourite(user_id=request.user.id, adverts=advert)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    # return HttpResponse("<script>history.back();</script>")
 
 
 @login_required
-def save_all_adverts(request: WSGIRequest, **kwargs) -> HttpResponseRedirect:
+def save_all_adverts(request: WSGIRequest) -> HttpResponseRedirect:
     """ Save all adverts from view to favourite adverts. """
 
+    adverts = Advert.filter_adverts(
+        place=request.session.get("place"),
+        price=request.session.get("price"),
+        area=request.session.get("area"),
+    )
+    Favourite.add_to_favourite(user_id=request.user.id, adverts=adverts)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
 @login_required
-def delete_all_adverts(request: WSGIRequest, **kwargs) -> HttpResponseRedirect:
+def delete_all_adverts(request: WSGIRequest) -> HttpResponseRedirect:
     """ Delete all adverts from view from favourite adverts. """
 
+    if request.session.get("view_name") == "favourites":
+        adverts = request.saved_adverts
+    else:
+        adverts = Advert.filter_adverts(
+            place=request.session.get("place"),
+            price=request.session.get("price"),
+            area=request.session.get("area"),
+        )
+    Favourite.remove_from_favourite(user_id=request.user.id, adverts=adverts)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
-
-
-# @login_required
-# def handling_favourite(request, **kwargs) -> HttpResponseRedirect:
-#     """ Handling adding or removing adverts from list of favourite. """
-#
-#     action = kwargs.pop("action")
-#     path_name = kwargs.pop("path_name")
-#     pk = kwargs.get("pk")
-#
-#     adverts = Advert.get_advert(pk)
-#     if not adverts:
-#         if action == "remove_all":
-#             adverts = Favourite.get_favourites(user_id=kwargs.get("user_id"))
-#         else:
-#             try:
-#                 adverts = Advert.filter_adverts(
-#                     price=kwargs.get("price"),
-#                     place=kwargs.get("place"),
-#                     area=kwargs.get("area"),
-#                 )
-#             except ValueError:
-#                 pass
-#
-#     if action == "add":
-#         Favourite.add_to_favourite(user_id=kwargs.get("user_id"), adverts=adverts)
-#     elif action in ["remove", "remove_all"]:
-#         Favourite.remove_from_favourite(user_id=kwargs.get("user_id"), adverts=adverts)
-#
-#     if path_name in ["advert_list", "favourite_list"]:
-#         try:
-#             kwargs.pop("pk")
-#         except KeyError:
-#             pass
-#
-#     return HttpResponseRedirect(reverse("parcels:{}".format(path_name), kwargs=kwargs))
 
 
 class Echo:
@@ -270,6 +224,8 @@ class Echo:
 
 
 def streaming_csv(request: WSGIRequest, user_id: int) -> StreamingHttpResponse:
+    # TODO move to models
+
     adverts = Favourite.get_favourites(user_id=user_id)
     rows = [
         [
@@ -303,6 +259,8 @@ def streaming_csv(request: WSGIRequest, user_id: int) -> StreamingHttpResponse:
 
 
 def sending_csv(request: WSGIRequest, user_id: int) -> HttpResponseRedirect:
+    # TODO move to models
+
     adverts = Favourite.get_favourites(user_id=user_id)
     rows = [
         [

@@ -128,11 +128,11 @@ class Favourite(models.Model):
     def get_or_create(cls, user: User):
         """ Gets the instance from the database if it exists. Otherwise creates the new one. """
 
-        try:
-            return cls.objects.get(user=user)
-        except cls.DoesNotExist:
-            cls(user=user).save()
-        return cls.objects.get(user=user)
+        while True:
+            try:
+                return cls.objects.get(user=user)
+            except cls.DoesNotExist:
+                cls(user=user).save()
 
     @classmethod
     def add_to_favourite(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:

@@ -51,6 +51,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "parcels.midleware.get_saved_adverts"
 ]
 
 ROOT_URLCONF = "parcels_web_app.urls"

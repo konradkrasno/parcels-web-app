@@ -102,5 +102,18 @@
     {% load static %}
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
 
+    <input type="hidden" id="refreshed" value="false">
+    <script type="text/javascript">
+        $(window).load(function(){
+            if ($('#refreshed').val() == "false") {
+              $('#refreshed').val("true");
+            }
+            else {
+              $('#refreshed').val("false");
+              location.reload();
+            }
+          });
+    </script>
+
   </body>
 </html>

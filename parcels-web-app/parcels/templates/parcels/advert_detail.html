@@ -11,24 +11,24 @@
 		  <div class="d-flex justify-content-between align-items-center">
 			<div class="btn-group">
 			  <button type="button" class="btn btn-sm btn-outline-secondary">
-			  {% if place == 'None' or area == 'None' or price == 'None' %}
+			  {% if request.session.view_name == 'favourites' %}
 				<a class="btn btn-sm" href="{% url 'parcels:favourite_list' %}">Powrót</a>
 			  {% else %}
-				<a class="btn btn-sm" href="{% url 'parcels:advert_list' place=place price=price area=area %}">Powrót</a>
+				<a class="btn btn-sm" href="{% url 'parcels:advert_list' %}">Powrót</a>
 			  {% endif %}
 			  </button>
 
 			  {% if user.is_authenticated %}
-				  {% if advert in saved_adverts %}
+				  {% if advert in request.saved_adverts %}
 				  <button type="button" class="btn btn-sm btn-outline-secondary">
-					  <a class="btn btn-sm" href="{% url 'parcels:delete_advert' place=place price=price area=area pk=advert.id %}">
+					  <a class="btn btn-sm" href="{% url 'parcels:delete_advert' pk=advert.id %}">
 						  <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
 						  Usuń
 					  </a>
 				  </button>
 				  {% else %}
 				  <button type="button" class="btn btn-sm btn-outline-secondary">
-					  <a class="btn btn-sm" href="{% url 'parcels:save_advert' place=place price=price area=area pk=advert.id %}">
+					  <a class="btn btn-sm" href="{% url 'parcels:save_advert' pk=advert.id %}">
 						  <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
 						  Zapisz
 					  </a>
