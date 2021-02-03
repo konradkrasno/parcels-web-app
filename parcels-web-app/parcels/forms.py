@@ -9,8 +9,8 @@ class AdvertForm(forms.ModelForm):
     place = forms.CharField(
         max_length=250, help_text="Podaj lokalizację działki", required=True
     )
-    price = forms.FloatField(help_text="Podaj maksymalną cenę", required=True)
-    area = forms.FloatField(help_text="Podaj minimalną powierzchnię", required=True)
+    price = forms.IntegerField(help_text="Podaj maksymalną cenę", required=True)
+    area = forms.IntegerField(help_text="Podaj minimalną powierzchnię", required=True)
 
     class Meta:
         model = Advert

@@ -120,12 +120,14 @@ class Index(View):
         return render(request, "parcels/advert_form.html", {"form": form})
 
     def post(self, request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
-        form = self.form_class(request.POST)
+        form = self.form_class(self.request.POST)
         if form.is_valid():
-            self.request.session.update(form.cleaned_data)
-            return HttpResponseRedirect(reverse("parcels:advert_list"))
+            if self.request.user.is_authenticated:
+                self.request.session.update(form.cleaned_data)
+            context = form.cleaned_data
+            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
         form = AdvertForm()
-        return render(request, "parcels/advert_form.html", {"form": form})
+        return render(self.request, "parcels/advert_form.html", {"form": form})
 
 
 class AdvertListView(ListView):
@@ -133,14 +135,26 @@ class AdvertListView(ListView):
     model = Advert
 
     def get_queryset(self) -> QuerySet:
-        place = self.request.session.get("place")
-        price = self.request.session.get("price")
-        area = self.request.session.get("area")
+        if self.request.user.is_authenticated:
+            place = self.request.session.get("place")
+            price = self.request.session.get("price")
+            area = self.request.session.get("area")
+        else:
+            place = self.kwargs.get("place")
+            price = self.kwargs.get("price")
+            area = self.kwargs.get("area")
         queryset = Advert.filter_adverts(place, price, area)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "place": self.kwargs.get("place"),
+                "price": self.kwargs.get("price"),
+                "area": self.kwargs.get("area"),
+            }
+        )
         self.request.session["view_name"] = "adverts"
         return context
 
@@ -154,6 +168,13 @@ class FavouriteListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "place": self.request.session.get("place"),
+                "price": self.request.session.get("price"),
+                "area": self.request.session.get("area"),
+            }
+        )
         self.request.session["view_name"] = "favourites"
         return context
 
@@ -164,6 +185,17 @@ class AdvertDetailView(DetailView):
 
     def get_queryset(self) -> QuerySet:
         return Advert.get_advert(self.kwargs.get("pk"))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                "place": self.kwargs.get("place"),
+                "price": self.kwargs.get("price"),
+                "area": self.kwargs.get("area"),
+            }
+        )
+        return context
 
 
 @login_required

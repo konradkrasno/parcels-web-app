@@ -10,31 +10,38 @@
     </form>
 
     <br>
-    <div class="btn-group">
-      {% if request.session.view_name != 'favourites' %}
-      <button type="button" class="btn btn-sm btn-outline-secondary">
-        <a class="btn btn-sm" href="{% url 'parcels:save_all_adverts' %}">
-            <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Zapisz wszystkie
-        </a>
-      </button>
-      {% endif %}
-      <button type="button" class="btn btn-sm btn-outline-secondary">
-        <a class="btn btn-sm" href="{% url 'parcels:delete_all_adverts' %}">
-            <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie
-        </a>
-      </button>
-      <button type="button" class="btn btn-sm btn-outline-secondary">
-        <a class="btn btn-sm" href="{% url 'parcels:streaming_csv' %}">Pobierz jako plik csv</a>
-      </button>
-      {% if user.is_authenticated %}
-      <button type="button" class="btn btn-sm btn-outline-secondary">
-        <a class="btn btn-sm" href="{% url 'parcels:sending_csv' %}">Wyślij email z plikiem csv</a>
-      </button>
-      {% endif %}
+    <div class="container">
+      <div class="btn-group">
+        {% if user.is_authenticated %}
+          {% if request.session.view_name != 'favourites' %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:save_all_adverts' %}">
+                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Zapisz wszystkie
+            </a>
+          </button>
+          {% endif %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:delete_all_adverts' %}">
+                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie
+            </a>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:streaming_csv' %}">Pobierz jako plik csv</a>
+          </button>
+          {% if user.is_authenticated %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:sending_csv' %}">Wyślij email z plikiem csv</a>
+          </button>
+          {% endif %}
+        {% else %}
+          <p>Zaloguj się, aby usyskać więcej opcji.</p>
+        {% endif %}
+      </div>
     </div>
 
   <div class="album py-5 bg-light">
     <div class="container">
+
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
 
       {% for advert in advert_list %}
@@ -51,7 +58,7 @@
               <div class="d-flex justify-content-between align-items-center">
                 <div class="btn-group">
                   <button type="button" class="btn btn-sm btn-outline-secondary">
-                    <a class="btn btn-sm" href="{% url 'parcels:advert_detail' pk=advert.pk %}">View</a>
+                    <a class="btn btn-sm" href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk %}">Wyświetl</a>
                   </button>
                   {% if user.is_authenticated %}
                       {% if advert in request.saved_adverts %}
