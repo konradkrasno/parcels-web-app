@@ -51,45 +51,10 @@ urlpatterns = [
         views.delete_all_adverts,
         name="delete_all_adverts",
     ),
-    # path(
-    #     "form/<place>/<price>/<area>/<int:pk>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="make_favourite",
-    # ),
-    # path(
-    #     "form/<place>/<price>/<area>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="make_all_favourite",
-    # ),
-    # path(
-    #     "favourites/<int:pk>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="make_favourite_from_favourites",
-    # ),
-    # path(
-    #     "form/<place>/<price>/<area>/<int:pk>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="remove_favourite",
-    # ),
-    # path(
-    #     "form/<place>/<price>/<area>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="remove_all_favourite",
-    # ),
-    # path(
-    #     "favourites/<int:pk>/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="remove_favourite_from_favourites",
-    # ),
-    # path(
-    #     "favourite/<str:action>/<str:path_name>",
-    #     views.handling_favourite,
-    #     name="remove_all_favourite_from_favourites",
-    # ),
-    path("csv", views.streaming_csv, name="streaming_csv"),
+    path("download_csv", views.streaming_csv, name="download_csv"),
     path(
-        "sending_csv",
+        "send_csv",
         views.sending_csv,
-        name="sending_csv",
+        name="send_csv",
     ),
 ]

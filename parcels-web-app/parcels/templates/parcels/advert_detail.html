@@ -38,6 +38,7 @@
 			</div>
 		  </div><br>
 			<h4  class="card-text">{{ advert.place }}</h4>
+			<h5  class="card-text">powiat {{ advert.county }}</h5>
 			<table>
 				<tr>
 					<td><p class="card-text">Cena</p></td>
@@ -54,6 +55,7 @@
 			</table><br>
 		  <p class="card-text">{{ advert.description }}</p>
 		  <p class="card-text">Dodano: {{ advert.date_added }}</p>
+		  <p class="card-text"><a href="{{ advert.link }}">Link do ogłoszenia</a></p>
 		</div>
 	  </div>
 	</div>

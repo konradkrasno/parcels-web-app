@@ -1,22 +1,18 @@
 {% extends "parcels/base.html" %}
+
+{% load crispy_forms_tags %}
+
 {% block content %}
 
-<div>
-
-	<h2>Wpisz dane logowania: </h2>
-
-	<form action="{% url 'parcels:login' %}" method="POST">
+<div class="container">
+	<h5>Wpisz dane logowania: </h5>
+	<br>
+	<form method="post" novalidate>
 		{% csrf_token %}
-		<label for="username">Nazwa użytkownika:</label>
-		<input type="text" name="username" placeholder="Nazwa użytkownika">
-
-		<label for="password">Hasło:</label>
-		<input type="password" name="password">
-
-		<input type="submit" name="" value="Login">
-
+		{{ form|crispy }}
+		<br>
+		<button type="submit" class="btn btn-success">Zaloguj</button>
 	</form>
-
 </div>
 
 {% endblock %}

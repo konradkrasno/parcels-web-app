@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "parcels",
+    "crispy_forms",
 ]
 
 MIDDLEWARE = [
@@ -51,7 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "parcels.midleware.get_saved_adverts"
+    "parcels.midleware.get_saved_adverts",
 ]
 
 ROOT_URLCONF = "parcels_web_app.urls"
@@ -148,3 +149,5 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"

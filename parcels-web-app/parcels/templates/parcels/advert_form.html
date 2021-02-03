@@ -1,20 +1,25 @@
 {% extends "parcels/base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
-<form class="post-form" method="POST">
-	{% csrf_token %}
-	{{ form.as_p }}
-	<button type="submit" class="save btn btn-default">Szukaj</button>
-</form>
+<div class="container">
+	<form method="post" novalidate>
+		{% csrf_token %}
+		{{ form|crispy }}
+		<br>
+		<button type="submit" class="btn btn-success">Szukaj</button>
+	</form>
 
-<p><a href="{% url 'parcels:advert_list' place='Halinów' price=200000 area=1000 %}">TEST ADVERT LIST</a></p>
+	<br>
+	<p><a href="{% url 'parcels:advert_list' place='Halinów' price=200000 area=1000 %}">TEST ADVERT LIST</a></p>
 
-
-<script>
-	window.onbeforeunload = function(e) {
-	sessionStorage.removeItem('scrollpos')
-	};
-</script>
+	<script>
+		window.onbeforeunload = function(e) {
+		sessionStorage.removeItem('scrollpos')
+		};
+	</script>
+</div>
 
 {% endblock %}

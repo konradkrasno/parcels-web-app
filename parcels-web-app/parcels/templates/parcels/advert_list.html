@@ -26,11 +26,11 @@
             </a>
           </button>
           <button type="button" class="btn btn-sm btn-outline-secondary">
-            <a class="btn btn-sm" href="{% url 'parcels:streaming_csv' %}">Pobierz jako plik csv</a>
+            <a class="btn btn-sm" href="{% url 'parcels:download_csv' %}">Pobierz jako plik csv</a>
           </button>
           {% if user.is_authenticated %}
           <button type="button" class="btn btn-sm btn-outline-secondary">
-            <a class="btn btn-sm" href="{% url 'parcels:sending_csv' %}">Wyślij email z plikiem csv</a>
+            <a class="btn btn-sm" href="{% url 'parcels:send_csv' %}">Wyślij email z plikiem csv</a>
           </button>
           {% endif %}
         {% else %}
@@ -51,6 +51,7 @@
 
             <div class="card-body">
               <h5  class="card-text">{{ advert.place }}</h5>
+              <h6  class="card-text">powiat {{ advert.county }}</h6>
               <h6  class="card-text">{{ advert.price }} PLN</h6>
               <h6  class="card-text">{{ advert.area }} m2</h6>
               <h6  class="card-text">{{ advert.price_per_m2 }} PLN/m2</h6>
@@ -91,16 +92,6 @@
   </div>
 
 </main>
-
-<footer class="text-muted py-5">
-  <div class="container">
-    <p class="float-end mb-1">
-      <a href="#">Back to top</a>
-    </p>
-    <p class="mb-1">Created by konradkrasno</p>
-    <p class="mb-0">To see more projects, visit my <a href="https://github.com/konradkrasno">GitHub</a> page.</p>
-  </div>
-</footer>
 
 {% load static %}
 <script src="{% static 'js/scripts.js' %}"></script>

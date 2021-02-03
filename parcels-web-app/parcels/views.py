@@ -3,6 +3,7 @@ import logging
 from io import StringIO
 from typing import Union
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,7 +15,6 @@ from django.db.models import QuerySet
 from django.db.utils import ProgrammingError
 from django.http import (
     HttpResponseRedirect,
-    HttpResponse,
     StreamingHttpResponse,
     JsonResponse,
 )
@@ -24,7 +24,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import View, ListView, DetailView
 
-from .forms import AdvertForm, SignUp
+from .forms import AdvertForm, SignUpForm, LoginForm
 from .models import Advert, Favourite
 from .tokens import account_activation_token
 
@@ -41,20 +41,18 @@ class UploadData(View):
         except (ProgrammingError, FileNotFoundError) as e:
             logging.error(e.__str__())
             return JsonResponse({"OK": e.__str__()})
-        else:
-            Advert.delete_duplicates()
-            return JsonResponse({"OK": "Data successfully updated."})
+        Advert.delete_duplicates()
+        return JsonResponse({"OK": "Data successfully updated."})
 
 
-def register(request: WSGIRequest) -> Union[HttpResponse, render]:
+def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
     if request.method == "POST":
-        user_form = SignUp(data=request.POST)
-        if user_form.is_valid():
-            user = user_form.save(commit=False)
+        form = SignUpForm(data=request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
             user.is_active = False
-            user.email = user_form.clean_email2()
+            user.email = form.clean_email2()
             user.save()
-
             current_site = get_current_site(request)
             mail_subject = "Aktywacja konta w aplikacji ParcelsScraper"
             message = render_to_string(
@@ -66,17 +64,21 @@ def register(request: WSGIRequest) -> Union[HttpResponse, render]:
                     "token": account_activation_token.make_token(user),
                 },
             )
-            to_email = user_form.cleaned_data.get("email1")
+            to_email = form.cleaned_data.get("email1")
             email = EmailMessage(mail_subject, message, to=[to_email])
             email.send()
-            return HttpResponse("Potwierdź adres email, aby dokończyć rejestrację.")
-    user_form = SignUp()
-    return render(request, "registration/registration.html", {"user_form": user_form})
+            messages.success(request, "Potwierdź adres email, aby dokończyć rejestrację.")
+            return HttpResponseRedirect(reverse("parcels:login"))
+        else:
+            for error in form.errors:
+                messages.error(request, error)
+    form = SignUpForm()
+    return render(request, "registration/registration.html", {"form": form})
 
 
 def activate(
     request: WSGIRequest, uidb64: str, token: str
-) -> Union[HttpResponse, HttpResponseRedirect]:
+) -> HttpResponseRedirect:
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
@@ -86,23 +88,31 @@ def activate(
         user.is_active = True
         user.save()
         return HttpResponseRedirect(reverse("parcels:login"))
-    return HttpResponse("Link aktywacyjny jest nieważny.")
+    messages.info(request, "Link aktywacyjny jest nieważny.")
+    return HttpResponseRedirect(reverse("parcels:register"))
 
 
 def user_login(
     request: WSGIRequest,
-) -> Union[HttpResponse, HttpResponseRedirect, render]:
+) -> Union[HttpResponseRedirect, render]:
     if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
-        user = authenticate(request, username=username, password=password)
-        if user:
-            login(request, user)
-            return HttpResponseRedirect(reverse("parcels:index"))
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            user = authenticate(
+                request,
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
+            )
+            if user:
+                login(request, user)
+                return HttpResponseRedirect(reverse("parcels:index"))
+            messages.error(request, "Złe dane logowania!")
+            return HttpResponseRedirect(reverse("parcels:login"))
         else:
-            return HttpResponse("Złe dane logowania!")
-    else:
-        return render(request, "registration/login.html", {})
+            for error in form.errors:
+                messages.error(request, error)
+    form = LoginForm()
+    return render(request, "registration/login.html", {"form": form})
 
 
 @login_required
@@ -126,6 +136,9 @@ class Index(View):
                 self.request.session.update(form.cleaned_data)
             context = form.cleaned_data
             return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
+        else:
+            for error in form.errors:
+                messages.error(request, error)
         form = AdvertForm()
         return render(self.request, "parcels/advert_form.html", {"form": form})
 
@@ -199,7 +212,7 @@ class AdvertDetailView(DetailView):
 
 
 @login_required
-def save_advert(request: WSGIRequest, pk: int) -> HttpResponse:
+def save_advert(request: WSGIRequest, pk: int) -> HttpResponseRedirect:
     """ Add advert to favourites adverts. """
 
     advert = Advert.get_advert(_id=pk)
@@ -208,7 +221,7 @@ def save_advert(request: WSGIRequest, pk: int) -> HttpResponse:
 
 
 @login_required
-def delete_advert(request: WSGIRequest, pk: int) -> HttpResponse:
+def delete_advert(request: WSGIRequest, pk: int) -> HttpResponseRedirect:
     """ Delete advert from favourites adverts. """
 
     advert = Advert.get_advert(_id=pk)
