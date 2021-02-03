@@ -6,13 +6,15 @@
 
 <div class="d-flex justify-content-center">
 	<div class="w-25 p-3">
-		<h5>Wpisz dane logowania: </h5>
+		<h5 class="text-center">Wpisz dane logowania: </h5>
 		<br>
 		<form method="post" novalidate>
 			{% csrf_token %}
 			{{ form|crispy }}
 			<br>
-			<button type="submit" class="btn btn-success">Zaloguj</button>
+			<div class="d-flex justify-content-center">
+				<button type="submit" class="btn btn-success">Zaloguj</button>
+			</div>
 		</form>
 	</div>
 </div>

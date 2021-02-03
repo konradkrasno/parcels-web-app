@@ -7,16 +7,18 @@
 <div class="d-flex justify-content-center">
 	<div class="w-25 p-3">
 	{% if user.is_active %}
-		<h5>Dziękujemy za rejestrację!</h5>
+		<h5 class="text-center">Dziękujemy za rejestrację!</h5>
 		<a href="{% url 'parcels:login' %}">Zaloguj</a>
 	{% else %}
-		<h5>Wypełnij formularz rejestracyjny: </h5>
+		<h5 class="text-center">Wypełnij formularz rejestracyjny: </h5>
 		<br>
 		<form method="post" novalidate>
 			{% csrf_token %}
 			{{ form|crispy }}
 			<br>
-			<button type="submit" class="btn btn-success">Zarejestruj</button>
+			<div class="d-flex justify-content-center">
+				<button type="submit" class="btn btn-success">Zarejestruj</button>
+			</div>
 		</form>
 	{% endif %}
 	</div>

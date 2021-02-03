@@ -3,6 +3,7 @@ import logging
 from io import StringIO
 from typing import Union
 
+import json
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -69,9 +70,10 @@ def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
             email.send()
             messages.success(request, "Potwierdź adres email, aby dokończyć rejestrację.")
             return HttpResponseRedirect(reverse("parcels:login"))
-        # else:
-        #     for error in form.errors:
-        #         messages.error(request, error)
+        else:
+            for errors in json.loads(form.errors.as_json()).values():
+                for error in errors:
+                    messages.error(request, error["message"])
     form = SignUpForm()
     return render(request, "registration/registration.html", {"form": form})
 
@@ -108,9 +110,10 @@ def user_login(
                 return HttpResponseRedirect(reverse("parcels:index"))
             messages.error(request, "Złe dane logowania!")
             return HttpResponseRedirect(reverse("parcels:login"))
-        # else:
-        #     for error in form.errors:
-        #         messages.error(request, error)
+        else:
+            for errors in json.loads(form.errors.as_json()).values():
+                for error in errors:
+                    messages.error(request, error["message"])
     form = LoginForm()
     return render(request, "registration/login.html", {"form": form})
 
@@ -136,9 +139,10 @@ class Index(View):
                 self.request.session.update(form.cleaned_data)
             context = form.cleaned_data
             return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
-        # else:
-        #     for error in form.errors:
-        #         messages.error(request, error)
+        else:
+            for errors in json.loads(form.errors.as_json()).values():
+                for error in errors:
+                    messages.error(request, error["message"])
         form = AdvertForm()
         return render(self.request, "parcels/advert_form.html", {"form": form})
 
