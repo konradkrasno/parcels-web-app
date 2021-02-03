@@ -2,11 +2,11 @@ images/*
 venv/*
 .idea/*
 scraped_data/*
-fixtures/*
-secure.json
+test_data/*
 */__pycache__
 */*/__pycache__
 */*/*/__pycache__
 parcels-web-app/parcels/migrations
+parcels-web-app/.env
 db.sqlite3
-to_do.txt
+todo.txt

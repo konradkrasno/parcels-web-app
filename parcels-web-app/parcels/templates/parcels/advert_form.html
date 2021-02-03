@@ -4,7 +4,8 @@
 
 {% block content %}
 
-<div class="container">
+<div class="d-flex justify-content-center">
+	<div class="w-50 p-3">
 	<form method="post" novalidate>
 		{% csrf_token %}
 		{{ form|crispy }}
@@ -20,6 +21,7 @@
 		sessionStorage.removeItem('scrollpos')
 		};
 	</script>
+	</div>
 </div>
 
 {% endblock %}

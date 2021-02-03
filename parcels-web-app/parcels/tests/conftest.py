@@ -8,7 +8,7 @@ from django.test import Client, RequestFactory
 from ..models import Advert, Favourite
 from ..tests.test_data import testing_data
 
-TEST_DIR = "fixtures"
+TEST_DIR = "test_data"
 
 
 @pytest.fixture
