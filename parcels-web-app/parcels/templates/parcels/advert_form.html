@@ -10,4 +10,11 @@
 
 <p><a href="{% url 'parcels:advert_list' place='Halinów' price=200000 area=1000 %}">TEST ADVERT LIST</a></p>
 
+
+<script>
+	window.onbeforeunload = function(e) {
+	sessionStorage.removeItem('scrollpos')
+	};
+</script>
+
 {% endblock %}

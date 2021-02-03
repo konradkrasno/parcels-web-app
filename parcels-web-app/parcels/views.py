@@ -205,7 +205,6 @@ def save_advert(request: WSGIRequest, pk: int) -> HttpResponse:
     advert = Advert.get_advert(_id=pk)
     Favourite.add_to_favourite(user_id=request.user.id, adverts=advert)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
-    # return HttpResponse("<script>history.back();</script>")
 
 
 @login_required
@@ -215,7 +214,6 @@ def delete_advert(request: WSGIRequest, pk: int) -> HttpResponse:
     advert = Advert.get_advert(_id=pk)
     Favourite.remove_from_favourite(user_id=request.user.id, adverts=advert)
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
-    # return HttpResponse("<script>history.back();</script>")
 
 
 @login_required
