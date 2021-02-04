@@ -6,24 +6,21 @@
 
 <div class="d-flex justify-content-center">
 	<div class="w-50 p-3">
-	<form method="post" novalidate>
-		{% csrf_token %}
-		{{ form|crispy }}
-		<br>
-		<div class="d-flex justify-content-center">
-			<button type="submit" class="btn btn-success">Szukaj</button>
-		</div>
-	</form>
-
-	<br>
-	<p><a href="{% url 'parcels:advert_list' place='Halinów' price=200000 area=1000 %}">TEST ADVERT LIST</a></p>
-
-	<script>
-		window.onbeforeunload = function(e) {
-		sessionStorage.removeItem('scrollpos')
-		};
-	</script>
+		<form method="post" novalidate>
+			{% csrf_token %}
+			{{ form|crispy }}
+			<br>
+			<div class="d-flex justify-content-center">
+				<button type="submit" class="btn btn-success">Szukaj</button>
+			</div>
+		</form>
 	</div>
 </div>
+
+<script>
+	window.onbeforeunload = function(e) {
+	sessionStorage.removeItem('scrollpos')
+	};
+</script>
 
 {% endblock %}

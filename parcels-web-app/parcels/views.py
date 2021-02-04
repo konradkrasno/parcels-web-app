@@ -1,9 +1,9 @@
 import csv
+import json
 import logging
 from io import StringIO
-from typing import Union
+from typing import *
 
-import json
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -68,7 +68,9 @@ def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
             to_email = form.cleaned_data.get("email1")
             email = EmailMessage(mail_subject, message, to=[to_email])
             email.send()
-            messages.success(request, "Potwierdź adres email, aby dokończyć rejestrację.")
+            messages.success(
+                request, "Potwierdź adres email, aby dokończyć rejestrację."
+            )
             return HttpResponseRedirect(reverse("parcels:login"))
         else:
             for errors in json.loads(form.errors.as_json()).values():
@@ -78,9 +80,7 @@ def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
     return render(request, "registration/registration.html", {"form": form})
 
 
-def activate(
-    request: WSGIRequest, uidb64: str, token: str
-) -> HttpResponseRedirect:
+def activate(request: WSGIRequest, uidb64: str, token: str) -> HttpResponseRedirect:
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
@@ -137,8 +137,8 @@ class Index(View):
         if form.is_valid():
             if self.request.user.is_authenticated:
                 self.request.session.update(form.cleaned_data)
-            context = form.cleaned_data
-            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=context))
+            self.kwargs.update(form.cleaned_data)
+            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=self.kwargs))
         else:
             for errors in json.loads(form.errors.as_json()).values():
                 for error in errors:
@@ -153,13 +153,13 @@ class AdvertListView(ListView):
 
     def get_queryset(self) -> QuerySet:
         if self.request.user.is_authenticated:
-            place = self.request.session.get("place")
-            price = self.request.session.get("price")
-            area = self.request.session.get("area")
+            place = self.request.session.get("place", 'None')
+            price = self.request.session.get("price", 0)
+            area = self.request.session.get("area", 0)
         else:
-            place = self.kwargs.get("place")
-            price = self.kwargs.get("price")
-            area = self.kwargs.get("area")
+            place = self.kwargs.get("place", 'None')
+            price = self.kwargs.get("price", 0)
+            area = self.kwargs.get("area", 0)
         queryset = Advert.filter_adverts(place, price, area)
         return queryset
 
@@ -167,9 +167,9 @@ class AdvertListView(ListView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "place": self.kwargs.get("place"),
-                "price": self.kwargs.get("price"),
-                "area": self.kwargs.get("area"),
+                "place": self.kwargs.get("place", 'None'),
+                "price": self.kwargs.get("price", 0),
+                "area": self.kwargs.get("area", 0),
             }
         )
         self.request.session["view_name"] = "adverts"
@@ -207,9 +207,9 @@ class AdvertDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "place": self.kwargs.get("place"),
-                "price": self.kwargs.get("price"),
-                "area": self.kwargs.get("area"),
+                "place": self.kwargs.get("place", "None"),
+                "price": self.kwargs.get("price", 0),
+                "area": self.kwargs.get("area", 0),
             }
         )
         return context

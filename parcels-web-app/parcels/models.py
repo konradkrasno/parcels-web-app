@@ -99,11 +99,14 @@ class Advert(models.Model):
     def filter_adverts(cls, place: str, price: int, area: int) -> QuerySet:
         """ Returns objects filtered by place, price and area ordered by price. """
 
-        return cls.objects.filter(
-            place=place,
-            price__lte=price,
-            area__gte=area,
-        ).order_by("price")
+        adverts = cls.objects.all()
+        if place != "None":
+            adverts = adverts.filter(place=place).order_by("price")
+        if price != 0:
+            adverts = adverts.filter(price__lte=price).order_by("price")
+        if area != 0:
+            adverts = adverts.filter(area__gte=area).order_by("price")
+        return adverts
 
 
 class Favourite(models.Model):
