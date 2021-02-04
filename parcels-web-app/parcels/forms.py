@@ -16,10 +16,16 @@ class AdvertForm(forms.Form):
         required=False,
     )
     price = forms.IntegerField(
-        label="Cena", help_text="Podaj maksymalną cenę", required=False, validators=[validate_positive]
+        label="Cena",
+        help_text="Podaj maksymalną cenę",
+        required=False,
+        validators=[validate_positive],
     )
     area = forms.IntegerField(
-        label="Powierzchnia", help_text="Podaj minimalną powierzchnię", required=False, validators=[validate_positive]
+        label="Powierzchnia",
+        help_text="Podaj minimalną powierzchnię",
+        required=False,
+        validators=[validate_positive],
     )
 
     class Meta:
@@ -29,8 +35,8 @@ class AdvertForm(forms.Form):
     def clean(self):
         data = super().clean()
         for key, val in data.items():
-            if val == '':
-                data[key] = 'None'
+            if val == "":
+                data[key] = "None"
             elif val is None:
                 data[key] = 0
         return data

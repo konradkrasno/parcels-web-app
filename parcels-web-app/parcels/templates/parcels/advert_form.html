@@ -11,16 +11,10 @@
 			{{ form|crispy }}
 			<br>
 			<div class="d-flex justify-content-center">
-				<button type="submit" class="btn btn-success">Szukaj</button>
+				<button type="submit" onclick="clearScrollPos()" class="btn btn-success">Szukaj</button>
 			</div>
 		</form>
 	</div>
 </div>
-
-<script>
-	window.onbeforeunload = function(e) {
-	sessionStorage.removeItem('scrollpos')
-	};
-</script>
 
 {% endblock %}

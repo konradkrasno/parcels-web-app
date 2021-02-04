@@ -24,6 +24,9 @@ class Advert(models.Model):
     date_added = models.CharField(max_length=50, null=True)
     description = models.TextField(null=True)
 
+    class Meta:
+        ordering = ["price"]
+
     def __repr__(self):
         return "place: {}, price: {} PLN, area: {} PLN/m2".format(
             self.place, self.price, self.area
@@ -101,11 +104,11 @@ class Advert(models.Model):
 
         adverts = cls.objects.all()
         if place != "None":
-            adverts = adverts.filter(place=place).order_by("price")
+            adverts = adverts.filter(place=place)
         if price != 0:
-            adverts = adverts.filter(price__lte=price).order_by("price")
+            adverts = adverts.filter(price__lte=price)
         if area != 0:
-            adverts = adverts.filter(area__gte=area).order_by("price")
+            adverts = adverts.filter(area__gte=area)
         return adverts
 
 

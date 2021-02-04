@@ -120,6 +120,13 @@
 
 {% load static %}
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script>
+  function clearScrollPos() {
+      window.onbeforeunload = function(e) {
+      sessionStorage.removeItem('scrollpos')
+      };
+  }
+</script>
 
 </body>
 </html>

@@ -139,7 +139,9 @@ class Index(View):
             if self.request.user.is_authenticated:
                 self.request.session.update(form.cleaned_data)
             self.kwargs.update(form.cleaned_data)
-            return HttpResponseRedirect(reverse("parcels:advert_list", kwargs=self.kwargs))
+            return HttpResponseRedirect(
+                reverse("parcels:advert_list", kwargs=self.kwargs)
+            )
         else:
             for errors in json.loads(form.errors.as_json()).values():
                 for error in errors:
@@ -150,15 +152,16 @@ class Index(View):
 
 class AdvertListView(ListView):
     template_name = "parcels/advert_list.html"
+    paginate_by = 15
     model = Advert
 
     def get_queryset(self) -> QuerySet:
         if self.request.user.is_authenticated:
-            place = self.request.session.get("place", 'None')
+            place = self.request.session.get("place", "None")
             price = self.request.session.get("price", 0)
             area = self.request.session.get("area", 0)
         else:
-            place = self.kwargs.get("place", 'None')
+            place = self.kwargs.get("place", "None")
             price = self.kwargs.get("price", 0)
             area = self.kwargs.get("area", 0)
         queryset = Advert.filter_adverts(place, price, area)
@@ -168,7 +171,7 @@ class AdvertListView(ListView):
         context = super().get_context_data(**kwargs)
         context.update(
             {
-                "place": self.kwargs.get("place", 'None'),
+                "place": self.kwargs.get("place", "None"),
                 "price": self.kwargs.get("price", 0),
                 "area": self.kwargs.get("area", 0),
             }
@@ -179,10 +182,20 @@ class AdvertListView(ListView):
 
 class FavouriteListView(LoginRequiredMixin, ListView):
     template_name = "parcels/advert_list.html"
+    paginate_by = 15
     model = Advert
 
     def get_queryset(self) -> QuerySet:
         return Favourite.get_favourites(user_id=self.request.user.id)
+
+    @staticmethod
+    def get_next_url(context: Dict) -> str:
+        page_obj = context.get("page_obj")
+        if len(page_obj.object_list) < 2 and page_obj.has_previous():
+            next_page = page_obj.previous_page_number()
+        else:
+            next_page = page_obj.number
+        return f"{reverse('parcels:favourite_list')}?page={next_page}"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -193,6 +206,7 @@ class FavouriteListView(LoginRequiredMixin, ListView):
                 "area": self.request.session.get("area", 0),
             }
         )
+        self.request.session["next_url"] = self.get_next_url(context)
         self.request.session["view_name"] = "favourites"
         return context
 
@@ -231,7 +245,11 @@ def delete_advert(request: WSGIRequest, pk: int) -> HttpResponseRedirect:
 
     advert = Advert.get_advert(_id=pk)
     Favourite.remove_from_favourite(user_id=request.user.id, adverts=advert)
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    next_url = request.session.get("next_url", None)
+    view_name = request.session.get("view_name")
+    if next_url is None or view_name == 'adverts':
+        next_url = request.META["HTTP_REFERER"]
+    return HttpResponseRedirect(next_url)
 
 
 @login_required
@@ -253,14 +271,16 @@ def delete_all_adverts(request: WSGIRequest) -> HttpResponseRedirect:
 
     if request.session.get("view_name") == "favourites":
         adverts = request.saved_adverts
+        next_url = reverse("parcels:favourite_list")
     else:
         adverts = Advert.filter_adverts(
             place=request.session.get("place"),
             price=request.session.get("price"),
             area=request.session.get("area"),
         )
+        next_url = request.META["HTTP_REFERER"]
     Favourite.remove_from_favourite(user_id=request.user.id, adverts=adverts)
-    return HttpResponseRedirect(request.META["HTTP_REFERER"])
+    return HttpResponseRedirect(next_url)
 
 
 def streaming_csv(request: WSGIRequest) -> StreamingHttpResponse:

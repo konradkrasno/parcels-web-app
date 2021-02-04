@@ -44,7 +44,7 @@
 
       <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
 
-      {% for advert in advert_list %}
+      {% for advert in page_obj %}
         <div class="col">
           <div class="card shadow-sm">
             <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><image href="https://img3.staticmorizon.com.pl/thumbnail/aHR0cDovL21lZGlhLmRvbXkucGwvaW1nL3pkamVjaWEvc2NpYW55LzUvc2NpYW55X3pzXzY1MjYlMjUyRjMwOTglMjUyRk9HU18xLmpwZyN2PTFfMTkzNzQ5OTE4Mw==/1664/936/2/dzialka-na-sprzedaz-dluga-szlachecka-1464-m-morizon-pl-7986.jpg" height="100%" width="100%"/></svg>
@@ -89,6 +89,34 @@
 
       </div>
     </div>
+  </div>
+
+  <div class="d-flex justify-content-center">
+    <nav aria-label="...">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" onclick="clearScrollPos()" href="?page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Previous</a>
+        </li>
+        {% endif %}
+        <li class="page-item active">
+          <a class="page-link" href=#>{{ page_obj.number }}</a>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+              <a class="page-link" onclick="clearScrollPos()" href="?page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+              <a class="page-link" href="#">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
   </div>
 
 </main>
