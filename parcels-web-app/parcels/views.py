@@ -138,9 +138,11 @@ class Index(View):
         if form.is_valid():
             if self.request.user.is_authenticated:
                 self.request.session.update(form.cleaned_data)
-            self.kwargs.update(form.cleaned_data)
             return HttpResponseRedirect(
-                reverse("parcels:advert_list", kwargs=self.kwargs)
+                "{}?place={place}&price={price}&area={area}".format(
+                    reverse('parcels:advert_list'),
+                    **form.cleaned_data,
+                )
             )
         else:
             for errors in json.loads(form.errors.as_json()).values():
@@ -161,21 +163,15 @@ class AdvertListView(ListView):
             price = self.request.session.get("price", 0)
             area = self.request.session.get("area", 0)
         else:
-            place = self.kwargs.get("place", "None")
-            price = self.kwargs.get("price", 0)
-            area = self.kwargs.get("area", 0)
+            place = self.request.GET.get("place", "None")
+            price = self.request.GET.get("price", 0)
+            area = self.request.GET.get("area", 0)
         queryset = Advert.filter_adverts(place, price, area)
         return queryset
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "place": self.kwargs.get("place", "None"),
-                "price": self.kwargs.get("price", 0),
-                "area": self.kwargs.get("area", 0),
-            }
-        )
+        context.update(self.request.GET.dict())
         self.request.session["view_name"] = "adverts"
         return context
 
@@ -197,15 +193,8 @@ class FavouriteListView(LoginRequiredMixin, ListView):
             next_page = page_obj.number
         return f"{reverse('parcels:favourite_list')}?page={next_page}"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "place": self.request.session.get("place", "None"),
-                "price": self.request.session.get("price", 0),
-                "area": self.request.session.get("area", 0),
-            }
-        )
         self.request.session["next_url"] = self.get_next_url(context)
         self.request.session["view_name"] = "favourites"
         return context
@@ -218,15 +207,9 @@ class AdvertDetailView(DetailView):
     def get_queryset(self) -> QuerySet:
         return Advert.get_advert(self.kwargs.get("pk"))
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs) -> Dict:
         context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                "place": self.kwargs.get("place", "None"),
-                "price": self.kwargs.get("price", 0),
-                "area": self.kwargs.get("area", 0),
-            }
-        )
+        context.update(self.request.GET.dict())
         return context
 
 

@@ -17,12 +17,12 @@ urlpatterns = [
     path("user_login", views.user_login, name="login"),
     path("user_logout", views.user_logout, name="logout"),
     path(
-        "adverts/<str:place>/<int:price>/<int:area>",
+        "adverts",
         views.AdvertListView.as_view(),
         name="advert_list",
     ),
     path(
-        "adverts/<str:place>/<int:price>/<int:area>/<int:pk>",
+        "adverts/<int:pk>",
         views.AdvertDetailView.as_view(),
         name="advert_detail",
     ),

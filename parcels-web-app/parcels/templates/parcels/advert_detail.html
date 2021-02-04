@@ -14,7 +14,7 @@
 			  {% if request.session.view_name == 'favourites' %}
 				<a class="btn btn-sm" href="{% url 'parcels:favourite_list' %}">Powrót</a>
 			  {% else %}
-				<a class="btn btn-sm" href="{% url 'parcels:advert_list' place=place price=price area=area %}">Powrót</a>
+				<a class="btn btn-sm" href="{% url 'parcels:advert_list' %}?place={{ place }}&price={{ price }}&area={{ area }}">Powrót</a>
 			  {% endif %}
 			  </button>
 
