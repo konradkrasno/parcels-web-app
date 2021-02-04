@@ -26,6 +26,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import View, ListView, DetailView
 
 from .forms import AdvertForm, SignUpForm, LoginForm
+from .helpers import prepare_csv, Echo
 from .models import Advert, Favourite
 from .tokens import account_activation_token
 
@@ -262,40 +263,9 @@ def delete_all_adverts(request: WSGIRequest) -> HttpResponseRedirect:
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
 
 
-class Echo:
-    """ Helper class for streaming csv file. """
-
-    @staticmethod
-    def write(value):
-        return value
-
-
-def streaming_csv(request: WSGIRequest, user_id: int) -> StreamingHttpResponse:
-    # TODO move to models
-
-    adverts = Favourite.get_favourites(user_id=user_id)
-    rows = [
-        [
-            "Miejscowość",
-            "Powiat",
-            "Cena",
-            "Cena za m2",
-            "Powierzchnia",
-            "Link",
-            "Data dodania",
-        ]
-    ]
-    for adv in adverts:
-        row = [
-            adv.place,
-            adv.county,
-            adv.price,
-            adv.price_per_m2,
-            adv.area,
-            adv.link,
-            adv.date_added,
-        ]
-        rows.append(row)
+def streaming_csv(request: WSGIRequest) -> StreamingHttpResponse:
+    adverts = Favourite.get_favourites(user_id=request.user.id)
+    rows = prepare_csv(adverts)
     pseudo_buffer = Echo()
     writer = csv.writer(pseudo_buffer)
     response = StreamingHttpResponse(
@@ -305,36 +275,13 @@ def streaming_csv(request: WSGIRequest, user_id: int) -> StreamingHttpResponse:
     return response
 
 
-def sending_csv(request: WSGIRequest, user_id: int) -> HttpResponseRedirect:
-    # TODO move to models
-
-    adverts = Favourite.get_favourites(user_id=user_id)
-    rows = [
-        [
-            "Miejscowość",
-            "Powiat",
-            "Cena",
-            "Cena za m2",
-            "Powierzchnia",
-            "Link",
-            "Data dodania",
-        ]
-    ]
-    for adv in adverts:
-        row = [
-            adv.place,
-            adv.county,
-            adv.price,
-            adv.price_per_m2,
-            adv.area,
-            adv.link,
-            adv.date_added,
-        ]
-        rows.append(row)
+def sending_csv(request: WSGIRequest) -> HttpResponseRedirect:
+    adverts = Favourite.get_favourites(user_id=request.user.id)
+    rows = prepare_csv(adverts)
     csv_file = StringIO()
     writer = csv.writer(csv_file)
     [writer.writerow(row) for row in rows]
-    user = User.objects.get(pk=user_id)
+    user = User.objects.get(pk=request.user.id)
     to_email = user.email
     email = EmailMessage(
         "ParcelsScraper - wybrane działki",
@@ -343,5 +290,4 @@ def sending_csv(request: WSGIRequest, user_id: int) -> HttpResponseRedirect:
     )
     email.attach("your_adverts.csv", csv_file.getvalue(), "text/csv")
     email.send()
-    context = {"user_id": user_id}
-    return HttpResponseRedirect(reverse("parcels:favourite_list", kwargs=context))
+    return HttpResponseRedirect(request.META["HTTP_REFERER"])
