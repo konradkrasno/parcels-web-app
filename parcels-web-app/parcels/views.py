@@ -33,6 +33,14 @@ from .tokens import account_activation_token
 logging.basicConfig(level=logging.DEBUG)
 
 
+def error_404(request, exception):
+    return render(request, "errors/404.html", locals())
+
+
+def error_500(request, exception=None):
+    return render(request, "errors/500.html", locals())
+
+
 class UploadData(View):
     """ Uploading data from json file to database. """
 
