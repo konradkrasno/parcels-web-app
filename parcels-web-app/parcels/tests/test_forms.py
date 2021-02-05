@@ -1,6 +1,6 @@
 import pytest
 
-from parcels.forms import AdvertForm, SignUp
+from ..forms import AdvertForm
 
 
 @pytest.mark.django_db

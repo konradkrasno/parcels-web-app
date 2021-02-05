@@ -1,33 +1,67 @@
 {% extends "parcels/base.html" %}
+
 {% block content %}
 
-<div class="container">
-	<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
-	{% if user.is_authenticated %}
-		{% if advert in adverts %}
-			<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='remove' path_name='advert_detail' %}">
-			    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
-			</a>
-		{% else %}
-			<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='add' path_name='advert_detail' %}">
-			    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
-			</a>
-		{% endif %}
-			<a class="btn btn-default" href="{% url 'parcels:advert_list' place=place price=price area=area user_id=user.id %}">Powrót do listy ogłoszeń</a>
-	{% else %}
-		<a class="btn btn-default" href="{% url 'parcels:advert_list' place=place price=price area=area user_id=0 %}">Powrót do listy ogłoszeń</a>
-	{% endif %}
+<main>
+	<div class="col">
+	  <div class="card shadow-sm">
+		<svg class="bd-placeholder-img card-img-top" width="200%" height="450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="200%" height="200%" fill="#55595c"/><image href="https://img3.staticmorizon.com.pl/thumbnail/aHR0cDovL21lZGlhLmRvbXkucGwvaW1nL3pkamVjaWEvc2NpYW55LzUvc2NpYW55X3pzXzY1MjYlMjUyRjMwOTglMjUyRk9HU18xLmpwZyN2PTFfMTkzNzQ5OTE4Mw==/1664/936/2/dzialka-na-sprzedaz-dluga-szlachecka-1464-m-morizon-pl-7986.jpg" height="100%" width="100%"/></svg>
 
-	<h1 class="posttitle">{{ advert.place }}</h1>
-	<h2 class="posttitle">{{ advert.county }}</h2>
-	<h3 class="posttitle">Cena: {{ advert.price }} PLN</h3>
-	<h3 class="posttitle">Cena za metr kwadratowy: {{ advert.price_per_m2 }} PLN/m2</h3>
-	<h3 class="posttitle">Powierzchnia: {{ advert.area }} m2</h3>	
-	<h3 class="posttitle">Data dodania: {{ advert.date_added }}</h3>
-	<h3>Opis</h3>	
-	<p class="posttitle">{{ advert.description }}</p>
+		<div class="card-body">
+		  <div class="d-flex justify-content-between align-items-center">
+			<div class="btn-group">
+			  <button type="button" class="btn btn-sm btn-outline-secondary">
+			  {% if request.session.view_name == 'favourites' %}
+				<a class="btn btn-sm" href="{% url 'parcels:favourite_list' %}?page={{ page }}">Powrót</a>
+			  {% else %}
+				<a class="btn btn-sm" href="{% url 'parcels:advert_list' %}?place={{ place }}&price={{ price }}&area={{ area }}&page={{ page }}">Powrót</a>
+			  {% endif %}
+			  </button>
 
+			  {% if user.is_authenticated %}
+				  {% if advert in request.saved_adverts %}
+				  <button type="button" class="btn btn-sm btn-outline-secondary">
+					  <a class="btn btn-sm" href="{% url 'parcels:delete_advert' pk=advert.id %}">
+						  <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+						  Usuń
+					  </a>
+				  </button>
+				  {% else %}
+				  <button type="button" class="btn btn-sm btn-outline-secondary">
+					  <a class="btn btn-sm" href="{% url 'parcels:save_advert' pk=advert.id %}">
+						  <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+						  Zapisz
+					  </a>
+				  </button>
+				  {% endif %}
+			  {% endif %}
+			</div>
+		  </div><br>
+			<h4  class="card-text">{{ advert.place }}</h4>
+			<h5  class="card-text">powiat {{ advert.county }}</h5>
+			<table>
+				<tr>
+					<td><p class="card-text">Cena</p></td>
+					<td><h5 class="card-text">{{ advert.price }} PLN</h5></td>
+				</tr>
+				<tr>
+					<td><p class="card-text">Powierzchnia</p></td>
+					<td><h5 class="card-text">{{ advert.area }} m2</h5></td>
+				</tr>
+				<tr>
+					<td><p class="card-text">Cena za m2</p></td>
+					<td><h5 class="card-text">{{ advert.price_per_m2 }} PLN/m2</h5></td>
+				</tr>
+			</table><br>
+		  <p class="card-text">{{ advert.description }}</p>
+		  <p class="card-text">Dodano: {{ advert.date_added }}</p>
+		  <p class="card-text"><a href="{{ advert.link }}">Link do ogłoszenia</a></p>
+		</div>
+	  </div>
+	</div>
+</main>
 
-</div>
+{% load static %}
+<script src="{% static 'js/scripts.js' %}"></script>
 
 {% endblock %}

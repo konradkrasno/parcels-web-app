@@ -1,15 +1,11 @@
-import pytest
 import os
-
 from collections.abc import Iterable
-from parcels.models import Advert, Favourite
-from parcels.tests.fixtures import (
-    create_test_csv,
-    add_testing_data_to_db,
+
+import pytest
+
+from ..models import Advert, Favourite
+from ..tests.conftest import (
     TEST_DIR,
-    user,
-    test_adverts,
-    add_favourites,
 )
 
 

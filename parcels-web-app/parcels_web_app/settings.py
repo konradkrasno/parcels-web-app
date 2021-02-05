@@ -10,48 +10,23 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-import logging
 import os
-import json
-import re
-
-logging.basicConfig(level=logging.DEBUG)
-
-
-with open("secure.json", "r") as file:
-    secure = json.load(file)
-
-
-MAIN_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        )
-    )
-)
-HOSTS_DIR = os.path.join(MAIN_DIR, "etc/hosts")
-try:
-    with open(HOSTS_DIR) as f:
-        host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + "1"
-except FileNotFoundError:
-    host = "127.0.0.1"
-
-logging.info("Host: {}".format(host))
-
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE_DIR = os.path.join(BASE_DIR, "parcels/templates/parcels")
 
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = secure["SECRET_KEY"]
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -66,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "parcels",
+    "crispy_forms",
 ]
 
 MIDDLEWARE = [
@@ -76,6 +52,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "parcels.midleware.get_saved_adverts",
 ]
 
 ROOT_URLCONF = "parcels_web_app.urls"
@@ -105,10 +82,12 @@ WSGI_APPLICATION = "parcels_web_app.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "postgres",
+        # "NAME": "postgres",
+        "NAME": "parcels",
         "USER": "postgres",
         "PASSWORD": "password",
-        "HOST": host,
+        # "HOST": "postgres",
+        "HOST": "localhost",
         "PORT": "5432",
     }
 }
@@ -158,15 +137,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_URL = "/parcels/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "parcels/static")
 
 LOGIN_URL = "user_login"
 LOGIN_REDIRECT_URL = "/"
 
 EMAIL_USE_SSL = True
-EMAIL_HOST = secure["EMAIL_HOST"]
-EMAIL_HOST_USER = secure["EMAIL_HOST_USER"]
-EMAIL_HOST_PASSWORD = secure["EMAIL_HOST_PASSWORD"]
-EMAIL_PORT = secure["EMAIL_PORT"]
-DEFAULT_FROM_EMAIL = secure["EMAIL_HOST_USER"]
+EMAIL_HOST = os.environ.get("EMAIL_HOST")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_PORT = os.environ.get("EMAIL_PORT")
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
+
+CRISPY_TEMPLATE_PACK = "bootstrap4"

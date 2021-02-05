@@ -1,11 +1,20 @@
 {% extends "parcels/base.html" %}
 
+{% load crispy_forms_tags %}
+
 {% block content %}
 
-<form class="post-form" method="POST">
-	{% csrf_token %}
-	{{ form.as_p }}
-	<button type="submit" class="save btn btn-default">Szukaj</button>
-</form>
+<div class="d-flex justify-content-center">
+	<div class="w-50 p-3">
+		<form method="post" novalidate>
+			{% csrf_token %}
+			{{ form|crispy }}
+			<br>
+			<div class="d-flex justify-content-center">
+				<button type="submit" onclick="clearScrollPos()" class="btn btn-success">Szukaj</button>
+			</div>
+		</form>
+	</div>
+</div>
 
 {% endblock %}

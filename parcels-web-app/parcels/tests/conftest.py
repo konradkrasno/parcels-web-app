@@ -1,14 +1,14 @@
-import pytest
 import os
+
 import pandas as pd
-
-from django.test import Client, RequestFactory
+import pytest
 from django.contrib.auth.models import User
+from django.test import Client, RequestFactory
 
-from parcels.tests.test_data import testing_data
-from parcels.models import Advert, Favourite
+from ..models import Advert, Favourite
+from ..tests.test_data import testing_data
 
-TEST_DIR = "fixtures"
+TEST_DIR = "test_data"
 
 
 @pytest.fixture

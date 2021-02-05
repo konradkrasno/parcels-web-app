@@ -1,16 +1,13 @@
-from typing import *
-
+import glob
 import logging
 import os
+from typing import *
+
 import pandas as pd
-import glob
-
-from django.db import models, transaction
-
-from django.db.utils import ProgrammingError
-from django.db.models import QuerySet
 from django.contrib.auth.models import User
-
+from django.db import models, transaction
+from django.db.models import QuerySet
+from django.db.utils import ProgrammingError
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,6 +23,9 @@ class Advert(models.Model):
     link = models.CharField(max_length=2000, null=True)
     date_added = models.CharField(max_length=50, null=True)
     description = models.TextField(null=True)
+
+    class Meta:
+        ordering = ["price"]
 
     def __repr__(self):
         return "place: {}, price: {} PLN, area: {} PLN/m2".format(
@@ -102,11 +102,14 @@ class Advert(models.Model):
     def filter_adverts(cls, place: str, price: int, area: int) -> QuerySet:
         """ Returns objects filtered by place, price and area ordered by price. """
 
-        return cls.objects.filter(
-            place=place,
-            price__lte=price,
-            area__gte=area,
-        ).order_by("price")
+        adverts = cls.objects.all()
+        if place != "None" and type(place) == str:
+            adverts = adverts.filter(place=place)
+        if price != 0 and type(price) == int:
+            adverts = adverts.filter(price__lte=price)
+        if area != 0 and type(area) == int:
+            adverts = adverts.filter(area__gte=area)
+        return adverts
 
 
 class Favourite(models.Model):
@@ -131,11 +134,11 @@ class Favourite(models.Model):
     def get_or_create(cls, user: User):
         """ Gets the instance from the database if it exists. Otherwise creates the new one. """
 
-        try:
-            return cls.objects.get(user=user)
-        except cls.DoesNotExist:
-            cls(user=user).save()
-        return cls.objects.get(user=user)
+        while True:
+            try:
+                return cls.objects.get(user=user)
+            except cls.DoesNotExist:
+                cls(user=user).save()
 
     @classmethod
     def add_to_favourite(cls, user_id: int, adverts: Union[list, QuerySet]) -> None:

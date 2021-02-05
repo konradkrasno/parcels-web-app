@@ -1,24 +1,16 @@
 import pytest
-
-from django.shortcuts import reverse
 from django.contrib.auth.models import User
 from django.core import mail
+from django.shortcuts import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from parcels import views
-from parcels.tests.fixtures import (
-    create_test_csv,
-    add_testing_data_to_db,
-    test_adverts,
-    add_favourites,
-    user,
-    client,
-    factory,
+from .. import views
+from ..models import Advert, Favourite
+from ..tests.conftest import (
     TEST_DIR,
 )
-from parcels.models import Advert, Favourite
-from parcels.tokens import account_activation_token
+from ..tokens import account_activation_token
 
 
 @pytest.mark.django_db

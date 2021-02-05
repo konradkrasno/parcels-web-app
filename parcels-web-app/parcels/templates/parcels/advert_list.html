@@ -1,52 +1,127 @@
 {% extends "parcels/base.html" %}
+
 {% block content %}
+<main>
+    {% if advert_list %}
 
-<div>
-	{% if advert_list %}	
-		{% if user.is_authenticated %}
-			{% if all_fav_added %}
-				<a class="btn btn-default" href="{% url 'parcels:remove_all_favourite' place=place price=price area=area user_id=user.id action='remove' path_name='advert_list' %}">
-				    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie z ulubionych
-				</a>
-			{% else %}
-				<a class="btn btn-default" href="{% url 'parcels:make_all_favourite' place=place price=price area=area user_id=user.id action='add' path_name='advert_list' %}">
-				    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj wszystkie do ulubionych
-				</a>
-			{% endif %}
-		{% endif %}
+    <form class="d-flex">
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+      <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
 
-		<h2>Wyniki wyszukiwania: </h2>
+    <br>
+    <div class="container">
+      <div class="btn-group">
+        {% if user.is_authenticated %}
+          {% if request.session.view_name != 'favourites' %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:save_all_adverts' %}">
+                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Zapisz wszystkie
+            </a>
+          </button>
+          {% endif %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:delete_all_adverts' %}">
+                <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń wszystkie
+            </a>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:download_csv' %}">Pobierz jako plik csv</a>
+          </button>
+          {% if user.is_authenticated %}
+          <button type="button" class="btn btn-sm btn-outline-secondary">
+            <a class="btn btn-sm" href="{% url 'parcels:send_csv' %}">Wyślij email z plikiem csv</a>
+          </button>
+          {% endif %}
+        {% else %}
+          <p>Zaloguj się, aby usyskać więcej opcji.</p>
+        {% endif %}
+      </div>
+    </div>
 
-		{% for advert in advert_list %}
-		<div class="post">
-			{% if user.is_authenticated %}
-				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=user.id %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
-			{% else %}
-				<h2><a href="{% url 'parcels:advert_detail' place=place price=price area=area pk=advert.pk user_id=0 %}">Nr {{ advert.pk }}: {{ advert.place }}</a></h2>
-			{% endif %}
-				<h3>{{ advert.price }} PLN</h3>
-				<h3>{{ advert.price_per_m2 }} PLN/m2</h3>
+  <div class="album py-5 bg-light">
+    <div class="container">
 
-				<a class="btn btn-default" href="{{ advert.link }}">Link do ogłoszenia</a>
-			{% if user.is_authenticated %}
-				{% if advert in adverts %}
-					<a class="btn btn-default" href="{% url 'parcels:remove_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='remove' path_name='advert_list' %}">
-					    <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Usuń z ulubionych
-					</a>
-				{% else %}
-					<a class="btn btn-default" href="{% url 'parcels:make_favourite' place=place price=price area=area pk=advert.pk user_id=user.id action='add' path_name='advert_list' %}">
-					    <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span> Dodaj do ulubionych
-					</a>
-				{% endif %}
-			{% endif %}
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
 
-		</div>
-		{% endfor %}
+      {% for advert in page_obj %}
+        <div class="col">
+          <div class="card shadow-sm">
+            <svg class="bd-placeholder-img card-img-top" width="100%" height="225" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="false"><title>Placeholder</title><rect width="100%" height="100%" fill="#55595c"/><image href="https://img3.staticmorizon.com.pl/thumbnail/aHR0cDovL21lZGlhLmRvbXkucGwvaW1nL3pkamVjaWEvc2NpYW55LzUvc2NpYW55X3pzXzY1MjYlMjUyRjMwOTglMjUyRk9HU18xLmpwZyN2PTFfMTkzNzQ5OTE4Mw==/1664/936/2/dzialka-na-sprzedaz-dluga-szlachecka-1464-m-morizon-pl-7986.jpg" height="100%" width="100%"/></svg>
 
-	{% else %}
-		<h2>Brak wyników wyszukiwania, spróbuj jeszcze raz.</h2>
-	{% endif %}
+            <div class="card-body">
+              <h5  class="card-text">{{ advert.place }}</h5>
+              <h6  class="card-text">powiat {{ advert.county }}</h6>
+              <h6  class="card-text">{{ advert.price }} PLN</h6>
+              <h6  class="card-text">{{ advert.area }} m2</h6>
+              <h6  class="card-text">{{ advert.price_per_m2 }} PLN/m2</h6>
+              <p class="card-text" style="display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">{{ advert.description }}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary">
+                    <a class="btn btn-sm" href="{% url 'parcels:advert_detail' pk=advert.pk %}{% if request.session.view_name != 'favourites' %}?place={{ place }}&price={{ price }}&area={{ area }}&{% else %}?{% endif %}page={{ page_obj.number }}">Wyświetl</a>
+                  </button>
+                  {% if user.is_authenticated %}
+                      {% if advert in request.saved_adverts %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                          <a class="btn btn-sm" href="{% url 'parcels:delete_advert' pk=advert.id %}">
+                              <span class="glyphicon glyphicon-star" aria-hidden="true"></span>
+                            Usuń</a>
+                        </button>
+                      {% else %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary">
+                          <a class="btn btn-sm" href="{% url 'parcels:save_advert' pk=advert.id %}">
+                              <span class="glyphicon glyphicon-star-empty" aria-hidden="true"></span>
+                            Zapisz</a>
+                        </button>
+                      {% endif %}
+                  {% endif %}
+                </div>
+                <small class="text-muted">{{ advert.date_added }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+          <h2>Brak wyników wyszukiwania.</h2>
+        {% endif %}
 
-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-center">
+    <nav aria-label="...">
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" onclick="clearScrollPos()" href="{% if request.session.view_name != 'favourites' %}?place={{ place }}&price={{ price }}&area={{ area }}&{% else %}?{% endif %}page={{ page_obj.previous_page_number }}" tabindex="-1">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" href="#" tabindex="-1">Previous</a>
+        </li>
+        {% endif %}
+        <li class="page-item active">
+          <a class="page-link" href=#>{{ page_obj.number }}</a>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+              <a class="page-link" onclick="clearScrollPos()" href="{% if request.session.view_name != 'favourites' %}?place={{ place }}&price={{ price }}&area={{ area }}&{% else %}?{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+              <a class="page-link" href="#">Next</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+
+</main>
+
+{% load static %}
+<script src="{% static 'js/scripts.js' %}"></script>
 
 {% endblock %}
