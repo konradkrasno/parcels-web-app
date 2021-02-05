@@ -103,11 +103,11 @@ class Advert(models.Model):
         """ Returns objects filtered by place, price and area ordered by price. """
 
         adverts = cls.objects.all()
-        if place != "None":
+        if place != "None" and type(place) == str:
             adverts = adverts.filter(place=place)
-        if price != 0:
+        if price != 0 and type(price) == int:
             adverts = adverts.filter(price__lte=price)
-        if area != 0:
+        if area != 0 and type(area) == int:
             adverts = adverts.filter(area__gte=area)
         return adverts
 
