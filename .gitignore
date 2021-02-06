@@ -11,3 +11,5 @@ parcels/migrations
 .env
 db.sqlite3
 todo.txt
+.coverage
+htmlcov
