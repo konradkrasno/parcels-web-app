@@ -18,20 +18,6 @@ services:
     environment:
       POSTGRES_PASSWORD: password
 
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: worker
-    links:
-      - redis
-    depends_on:
-      - redis
-    volumes:
-      - .:/usr/src/app
-    working_dir: /usr/src/app
-#    command: celery -A app.app_tasks.tasks.celery worker -l info
-
   web:
     build:
       context: .
@@ -48,3 +34,19 @@ services:
       - .:/usr/src/app
     working_dir: /usr/src/app
     command: ./boot.sh
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: worker
+    links:
+      - postgres
+      - redis
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: celery -A parcels_web_app worker -l info

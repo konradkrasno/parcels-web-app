@@ -9,3 +9,4 @@ pytest-mock==3.3.1
 python-dotenv==0.15.0
 django-crispy-forms==1.11.0
 scrapy==2.4.1
+celery==5.0.5
