@@ -1,9 +1,15 @@
+from typing import *
+
 from celery import shared_task
-from time import sleep
+from django.core.mail import EmailMessage
 
 
 @shared_task
-def test_task():
-    for i in range(30):
-        print(i)
-        sleep(0.5)
+def send_email(subject: str, body: str, to: List, attachments: List = None):
+    email = EmailMessage(
+        subject=subject,
+        body=body,
+        to=to,
+        attachments=attachments
+    )
+    email.send()

@@ -11,7 +11,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.handlers.wsgi import WSGIRequest
-from django.core.mail import EmailMessage
 from django.db.models import QuerySet
 from django.db.utils import ProgrammingError
 from django.http import (
@@ -28,6 +27,7 @@ from django.views.generic import View, ListView, DetailView
 from .forms import AdvertForm, SignUpForm, LoginForm
 from .helpers import prepare_csv, Echo
 from .models import Advert, Favourite
+from .tasks import send_email
 from .tokens import account_activation_token
 
 logging.basicConfig(level=logging.DEBUG)
@@ -74,9 +74,12 @@ def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
                     "token": account_activation_token.make_token(user),
                 },
             )
-            to_email = form.cleaned_data.get("email1")
-            email = EmailMessage(mail_subject, message, to=[to_email])
-            email.send()
+            recipient = form.cleaned_data.get("email1")
+            send_email.delay(
+                subject=mail_subject,
+                body=message,
+                to=[recipient]
+            )
             messages.success(
                 request, "Potwierdź adres email, aby dokończyć rejestrację."
             )
@@ -293,12 +296,11 @@ def sending_csv(request: WSGIRequest) -> HttpResponseRedirect:
     writer = csv.writer(csv_file)
     [writer.writerow(row) for row in rows]
     user = User.objects.get(pk=request.user.id)
-    to_email = user.email
-    email = EmailMessage(
-        "ParcelsScraper - wybrane działki",
-        "W załączeniu przesyłamy wybrane przez Ciebie działki.",
-        to=[to_email],
+    recipient = user.email
+    send_email.delay(
+        subject="ParcelsScraper - wybrane działki",
+        body="W załączeniu przesyłamy wybrane przez Ciebie działki.",
+        to=[recipient],
+        attachments=[("your_adverts.csv", csv_file.getvalue(), "text/csv")],
     )
-    email.attach("your_adverts.csv", csv_file.getvalue(), "text/csv")
-    email.send()
     return HttpResponseRedirect(request.META["HTTP_REFERER"])
