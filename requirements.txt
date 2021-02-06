@@ -7,4 +7,5 @@ pandas==1.1.3
 pytest-django==4.0.0
 pytest-mock==3.3.1
 python-dotenv==0.15.0
-django-crispy-forms-1.11.0
+django-crispy-forms==1.11.0
+scrapy==2.4.1

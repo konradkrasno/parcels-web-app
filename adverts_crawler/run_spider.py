@@ -1,8 +1,5 @@
 import os
 import glob
-import logging
-import requests
-import re
 
 from scrapy.utils.project import get_project_settings
 from scrapy.crawler import CrawlerProcess
@@ -12,29 +9,12 @@ from adverts_crawler.spiders.scraper import (
     StrzelczykSpider,
 )
 
-DATA_CATALOG = "scraped_data"
-
-MAIN_DIR = os.path.dirname(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        )
-    )
-)
-
-HOSTS_DIR = os.path.join(MAIN_DIR, "etc/hosts")
-
-try:
-    with open(HOSTS_DIR) as f:
-        host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + "1"
-except FileNotFoundError:
-    host = "127.0.0.1"
-
-logging.info("Host: {}".format(host))
+MAIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_CATALOG = os.path.join(MAIN_DIR, "../scraped_data")
 
 
 if __name__ == "__main__":
-    [os.remove(file) for file in glob.glob("./{}/*.csv".format(DATA_CATALOG))]
+    [os.remove(file) for file in glob.glob("{}/*.csv".format(DATA_CATALOG))]
 
     s = get_project_settings()
     s["FEED_FORMAT"] = "csv"
@@ -45,6 +25,6 @@ if __name__ == "__main__":
     process.crawl(StrzelczykSpider)
     process.start()
 
-    # make post request to django service for uploading data to database
-    URL = "http://{}:8000/upload_data/{}".format(host, DATA_CATALOG)
-    requests.post(URL)
+    # # make post request to django service for uploading data to database
+    # URL = "http://{}:8000/upload_data/{}".format(host, DATA_CATALOG)
+    # requests.post(URL)

@@ -23,6 +23,7 @@ class Advert(models.Model):
     link = models.CharField(max_length=2000, null=True)
     date_added = models.CharField(max_length=50, null=True)
     description = models.TextField(null=True)
+    image_url = models.CharField(max_length=500, null=True)
 
     class Meta:
         ordering = ["price"]
@@ -46,6 +47,7 @@ class Advert(models.Model):
                     link=item[5],
                     date_added=item[6],
                     description=item[7],
+                    image_url=item[8],
                 ).save()
         except ValueError as e:
             logging.error(e)
@@ -64,7 +66,6 @@ class Advert(models.Model):
         if files:
             for file in files:
                 adv = pd.read_csv(file)
-
                 try:
                     for item in adv.values:
                         cls.create(item)
@@ -74,7 +75,6 @@ class Advert(models.Model):
                     )
         else:
             raise FileNotFoundError("No files to added.")
-
         logging.info("Data successfully updated.")
 
     @classmethod
@@ -110,6 +110,10 @@ class Advert(models.Model):
         if area != 0 and type(area) == int:
             adverts = adverts.filter(area__gte=area)
         return adverts
+
+    @classmethod
+    def get_places(cls) -> Tuple:
+        return ("Warszawa", "Halinów")
 
 
 class Favourite(models.Model):
