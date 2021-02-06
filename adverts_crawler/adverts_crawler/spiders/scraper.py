@@ -11,18 +11,11 @@ class MorizonSpider(scrapy.Spider):
     name = "morizon"
 
     def start_requests(self):
-
         for i in range(1, 35):
-            if i == 1:
-                yield scrapy.Request(
-                    "https://www.morizon.pl/dzialki/budowlana/minski",
-                    callback=self.parse_advert,
-                )
-            else:
-                yield scrapy.Request(
-                    "https://www.morizon.pl/dzialki/budowlana/minski/?page=" + str(i),
-                    callback=self.parse_advert,
-                )
+            yield scrapy.Request(
+                f"https://www.morizon.pl/dzialki/budowlana/minski/?page={i}",
+                callback=self.parse_advert,
+            )
 
     def parse_advert(self, response):
         pages = response.xpath(
@@ -45,7 +38,7 @@ class MorizonSpider(scrapy.Spider):
         data = {
             "place": response.xpath('//div[@class="col-xs-9"]/h1/strong/span[2]/text()')
             .get()
-            .split(",")[0],
+            .split(",")[0].strip(),
             "county": "".join(
                 response.xpath('//div[@class="col-xs-9"]/h1/strong/span/text()')
                 .get()
@@ -76,8 +69,8 @@ class MorizonSpider(scrapy.Spider):
             "description": remove_tags(
                 " ".join(response.xpath('//div[@class="description"]').get().split())
             ),
+            "image_url": response.xpath('//div[@class="imageBig"]/img/@src').get(),
         }
-
         yield data
 
 
@@ -85,24 +78,17 @@ class AdresowoSpider(scrapy.Spider):
     name = "adresowo"
 
     def start_requests(self):
-
         for i in range(1, 13):
-            if i == 1:
-                yield scrapy.Request(
-                    "https://adresowo.pl/dzialki/powiat-minski/fz1z4",
-                    callback=self.parse_advert,
-                )
-            else:
-                yield scrapy.Request(
-                    "https://adresowo.pl/dzialki/powiat-minski/fz1z4_l" + str(i),
-                    callback=self.parse_advert,
-                )
+            yield scrapy.Request(
+                f"https://adresowo.pl/dzialki/powiat-minski/fz1z4_l{i}",
+                callback=self.parse_advert,
+            )
 
     def parse_advert(self, response):
         pages = response.xpath('//div[@class="result-info"]/a/@href').extract()
 
         for page in pages:
-            url = "https://adresowo.pl" + page
+            url = f"https://adresowo.pl{page}"
             request = scrapy.Request(url=url, callback=self.parse_advert_data)
             request.meta["link"] = url
             yield request
@@ -110,7 +96,7 @@ class AdresowoSpider(scrapy.Spider):
     @staticmethod
     def parse_advert_data(response):
         data = {
-            "place": response.xpath('//span[@class="offer-header__city"]/text()').get(),
+            "place": response.xpath('//span[@class="offer-header__city"]/text()').get().strip(),
             "county": "miński",
             "price": response.xpath(
                 '//div[@class="offer-summary__item offer-summary__item1"]/div/span/text()'
@@ -150,8 +136,8 @@ class AdresowoSpider(scrapy.Spider):
                     .split()
                 )
             ),
+            "image_url": response.xpath('//div[@class="offer-gallery"]/img/@src').get(),
         }
-
         yield data
 
 
@@ -161,17 +147,15 @@ class StrzelczykSpider(scrapy.Spider):
     def start_requests(self):
         for i in range(0, 3):
             yield scrapy.Request(
-                "https://www.strzelczyk-nieruchomosci.pl/oferty/?page=" + str(i),
+                f"https://www.sulejowek-nieruchomosci.pl/oferty/dzialki/sprzedaz/?page={i}",
                 callback=self.parse_advert,
             )
 
     def parse_advert(self, response):
-        pages = response.xpath(
-            '//div[@class="bottomLinkOffer listMore"]/a/@href'
-        ).extract()
+        pages = response.xpath('//div[@class="link-to-offer"]/@data-href').extract()
 
         for page in pages:
-            url = "https://www.strzelczyk-nieruchomosci.pl/" + page
+            url = f"https://www.sulejowek-nieruchomosci.pl/{page}"
             request = scrapy.Request(url=url, callback=self.parse_advert_data)
             request.meta["link"] = url
             yield request
@@ -179,50 +163,39 @@ class StrzelczykSpider(scrapy.Spider):
     @staticmethod
     def parse_advert_data(response):
         data = {
-            "place": response.xpath('//div[@class="locationOffer"]/text()')
-            .get()
-            .split(", ")[1],
-            "county": response.xpath('//div[@class="locationOffer"]/text()')
-            .get()
-            .split()[0],
+            "place": response.xpath(
+                '//li[@class="breadcrumb-item active"]/a/span/text()'
+            ).get().strip(),
+            "county": "brak danych",
             "price": response.xpath(
-                '//div[@class="ofePrice pull-left fieldHeadOfe"]/span/text()'
+                '//div[@class="col-md-3 offer--shortcut__details cena"]/span[@class="offer--shortcut__span-value"]/text()'
             )
             .get()
-            .replace(" ", "")
-            .replace("zł", "")
-            .replace(",", "."),
+            .replace(" ", ""),
             "price_per_m2": response.xpath(
-                '//div[@class="ofePriceSquare pull-left fieldHeadOfe"]/span[2]/text()'
+                '//div[@class="col-md-3 offer--shortcut__details cena_za"]/span[@class="offer--shortcut__span-value"]/text()'
             )
             .get()
-            .replace(" ", "")
+            .split()[0]
             .replace(",", "."),
-            "area": response.xpath(
-                '//div[@class="ofeArea pull-left fieldHeadOfe"]/span[2]/text()'
-            )
-            .get()
-            .replace(" ", "")
-            .replace(",", "."),
+            "area": "".join(
+                response.xpath(
+                    '//div[@class="col-md-3 offer--shortcut__details powierzchnia"]/span[@class="offer--shortcut__span-value"]/text()'
+                )
+                .get()
+                .replace(",", ".")
+                .replace("m²", "")
+                .split()
+            ),
             "link": response.meta["link"],
             "date_added": "brak danych",
             "description": remove_tags(
                 " ".join(
-                    response.xpath('//div[@class="valueDescription"]').get().split()
-                )
-            )
-            + "\n"
-            + remove_tags(
-                " ".join(
-                    response.xpath(
-                        '//div[@class="col-xs-12 col-sm-12 '
-                        "col-md-6 col-lg-6 noPaddingLeft pu"
-                        'll-right"]'
-                    )
-                    .get()
-                    .split()
+                    response.xpath('//div[@class="section__text-group"]').get().split()
                 )
             ),
+            "image_url": response.xpath(
+                '//div[@class="image-container"]/a/@href'
+            ).get(),
         }
-
         yield data

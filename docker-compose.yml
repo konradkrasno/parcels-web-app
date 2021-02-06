@@ -20,7 +20,7 @@ services:
 
   worker:
     build:
-      context: ./parcels-web-app
+      context: .
       dockerfile: Dockerfile
     container_name: worker
     links:
@@ -34,17 +34,17 @@ services:
 
   web:
     build:
-      context: ./parcels-web-app
+      context: .
       dockerfile: Dockerfile
     container_name: web
     depends_on:
       - postgres
       - redis
     env_file:
-      - "./parcels-web-app/.env"
+      - ".env"
     ports:
       - "8000:8000"
     volumes:
       - .:/usr/src/app
     working_dir: /usr/src/app
-    command: ./parcels-web-app/boot.sh
+    command: ./boot.sh

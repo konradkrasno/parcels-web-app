@@ -3,10 +3,11 @@ venv/*
 .idea/*
 scraped_data/*
 test_data/*
+__pycache__
 */__pycache__
 */*/__pycache__
 */*/*/__pycache__
-parcels-web-app/parcels/migrations
-parcels-web-app/.env
+parcels/migrations
+.env
 db.sqlite3
 todo.txt

@@ -1,6 +1,6 @@
 import pytest
 
-from ..forms import AdvertForm
+from parcels.forms import AdvertForm, SignUpForm, LoginForm
 
 
 @pytest.mark.django_db
@@ -10,27 +10,11 @@ class TestForms:
     pytestmark = pytest.mark.django_db
 
     def test_advert_form_when_valid(self):
-        form = AdvertForm(
-            data={
-                "place": "Warszawa",
-                "price": "500000",
-                "area": "1000",
-            }
-        )
-
+        form = AdvertForm({})
         assert form.is_valid()
 
-    def test_advert_form_when_invalid(self):
-        form = AdvertForm(
-            data={
-                "price": "500000",
-                "area": "1000",
-            }
-        )
-        assert not form.is_valid()
-
     def test_sign_up_form_when_valid(self):
-        form = SignUp(
+        form = SignUpForm(
             data={
                 "username": "test_user",
                 "password1": "secret132",
@@ -42,7 +26,7 @@ class TestForms:
         assert form.is_valid()
 
     def test_sign_up_form_when_invalid(self):
-        form = SignUp(
+        form = SignUpForm(
             data={
                 "username": "test_user",
                 "password1": "password",
@@ -51,4 +35,17 @@ class TestForms:
                 "email2": "test@gmail.com",
             }
         )
+        assert not form.is_valid()
+
+    def test_login_form_when_valid(self):
+        form = LoginForm(
+            data={
+                "username": "test_user",
+                "password": "password",
+            }
+        )
+        assert form.is_valid()
+
+    def test_login_form_when_invalid(self):
+        form = LoginForm(data={})
         assert not form.is_valid()

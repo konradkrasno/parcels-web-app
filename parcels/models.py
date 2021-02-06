@@ -23,9 +23,7 @@ class Advert(models.Model):
     link = models.CharField(max_length=2000, null=True)
     date_added = models.CharField(max_length=50, null=True)
     description = models.TextField(null=True)
-
-    class Meta:
-        ordering = ["price"]
+    image_url = models.CharField(max_length=500, null=True)
 
     def __repr__(self):
         return "place: {}, price: {} PLN, area: {} PLN/m2".format(
@@ -46,6 +44,7 @@ class Advert(models.Model):
                     link=item[5],
                     date_added=item[6],
                     description=item[7],
+                    image_url=item[8],
                 ).save()
         except ValueError as e:
             logging.error(e)
@@ -64,7 +63,6 @@ class Advert(models.Model):
         if files:
             for file in files:
                 adv = pd.read_csv(file)
-
                 try:
                     for item in adv.values:
                         cls.create(item)
@@ -74,7 +72,6 @@ class Advert(models.Model):
                     )
         else:
             raise FileNotFoundError("No files to added.")
-
         logging.info("Data successfully updated.")
 
     @classmethod
@@ -102,14 +99,18 @@ class Advert(models.Model):
     def filter_adverts(cls, place: str, price: int, area: int) -> QuerySet:
         """ Returns objects filtered by place, price and area ordered by price. """
 
-        adverts = cls.objects.all()
+        adverts = cls.objects.all().order_by("price")
         if place != "None" and type(place) == str:
-            adverts = adverts.filter(place=place)
+            adverts = adverts.filter(place=place).order_by("price")
         if price != 0 and type(price) == int:
-            adverts = adverts.filter(price__lte=price)
+            adverts = adverts.filter(price__lte=price).order_by("price")
         if area != 0 and type(area) == int:
-            adverts = adverts.filter(area__gte=area)
+            adverts = adverts.filter(area__gte=area).order_by("price")
         return adverts
+
+    @classmethod
+    def get_places(cls) -> Tuple:
+        return tuple(set(cls.objects.only("place").values_list("place", flat=True).order_by("place")))
 
 
 class Favourite(models.Model):
