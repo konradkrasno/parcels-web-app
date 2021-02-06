@@ -9,7 +9,7 @@ from adverts_crawler.spiders.scraper import (
     StrzelczykSpider,
 )
 
-MAIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MAIN_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_CATALOG = os.path.join(MAIN_DIR, "../scraped_data")
 
 

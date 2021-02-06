@@ -3,8 +3,8 @@ from collections.abc import Iterable
 
 import pytest
 
-from ..models import Advert, Favourite
-from ..tests.conftest import (
+from parcels.models import Advert, Favourite
+from parcels.tests.conftest import (
     TEST_DIR,
 )
 
@@ -30,7 +30,7 @@ class TestAdvert:
 
     def test_delete_duplicates(self):
         actual_data = [obj["place"] for obj in Advert.objects.values("place")]
-        expected_data = ["Dębe Wielkie", "Rysie"]
+        expected_data = ["Dębe Wielkie", "Rysie", "Rysie"]
         assert actual_data == expected_data
 
     def test_get_adverts_when_advert_do_not_exist(self):
@@ -51,8 +51,8 @@ class TestAdvert:
             == "Rysie"
         )
 
-    def test_get_places(self, add_testing_data_to_db):
-        assert Advert.get_places() == {"Rysie", "Dębe Wielkie"}
+    def test_get_places(self):
+        assert len(Advert.get_places()) == 2
 
 
 @pytest.mark.django_db
@@ -69,7 +69,7 @@ class TestFavourite:
         expected_adverts = test_adverts.values_list("place", "price", "area")
         assert list(added_adverts) == list(expected_adverts)
 
-    def test_add__to_favourite_with_empty_list(self, user):
+    def test_add_to_favourite_with_empty_list(self, user):
         Favourite.add_to_favourite(user_id=user.id, adverts=[])
         added_adverts = Favourite.objects.select_related("adverts").values_list(
             "adverts__place", "adverts__price", "adverts__area"
@@ -86,7 +86,7 @@ class TestFavourite:
             "place", "price", "area"
         )
         assert list(result_adverts) == list(expected_adverts)
-        assert len(result_adverts) == 1
+        assert len(result_adverts) == 2
 
     def test_remove_from_favourite_with_empty_list(
         self, user, test_adverts, add_favourites
@@ -97,7 +97,7 @@ class TestFavourite:
         )
         expected_adverts = test_adverts.values_list("place", "price", "area")
         assert list(result_adverts) == list(expected_adverts)
-        assert len(result_adverts) == 2
+        assert len(result_adverts) == 3
 
     def test_remove_from_favourite_when_object_not_in_favourites(
         self, user, test_adverts
@@ -114,7 +114,7 @@ class TestFavourite:
         result_adverts = Favourite.get_favourites(user_id=user.id)
         for result, expected in zip(result_adverts, test_adverts):
             assert result == expected
-        assert len(result_adverts) == 2
+        assert len(result_adverts) == 3
 
     def test_get_favourites_when_user_do_not_exist(self):
         result_advert = Favourite.get_favourites(user_id=100)

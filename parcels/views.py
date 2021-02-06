@@ -142,10 +142,10 @@ class Index(View):
         return render(request, "parcels/advert_form.html", {"form": form})
 
     def post(self, request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
-        form = self.form_class(self.request.POST)
+        form = self.form_class(request.POST)
         if form.is_valid():
-            if self.request.user.is_authenticated:
-                self.request.session.update(form.cleaned_data)
+            if request.user.is_authenticated:
+                request.session.update(form.cleaned_data)
             return HttpResponseRedirect(
                 "{}?place={place}&price={price}&area={area}".format(
                     reverse('parcels:advert_list'),

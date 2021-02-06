@@ -5,8 +5,8 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import Client, RequestFactory
 
-from ..models import Advert, Favourite
-from ..tests.test_data import testing_data
+from parcels.models import Advert, Favourite
+from parcels.tests.test_data import testing_data
 
 TEST_DIR = "test_data"
 
@@ -29,6 +29,7 @@ def create_test_csv():
         "link",
         "date_added",
         "description",
+        "image_url"
     ]
     rows = [item.values() for item in testing_data]
     df = pd.DataFrame(rows, columns=header)
@@ -38,8 +39,8 @@ def create_test_csv():
     )
 
 
-@pytest.fixture
-def add_testing_data_to_db():
+@pytest.fixture(autouse=True)
+def populate_db_with_test_data():
     """Adds data to database."""
 
     for item in testing_data:
@@ -48,7 +49,7 @@ def add_testing_data_to_db():
 
 
 @pytest.fixture
-def test_adverts(add_testing_data_to_db) -> list:
+def test_adverts() -> list:
     return Advert.objects.all()
 
 
@@ -73,7 +74,7 @@ def client():
     """ Provides fake client. """
 
     client = Client()
-    # if user fixture is used then client log in, otherwise not log in
+    # if user fixture is used then client is logged in, otherwise not logged in
     client.login(username="test_user", password="password")
     return client
 
