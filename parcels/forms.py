@@ -1,9 +1,8 @@
-from typing import *
-
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 
+from .fields import ListTextWidget
 from .models import Advert
 from .validators import validate_positive
 
@@ -27,6 +26,11 @@ class AdvertForm(forms.Form):
         required=False,
         validators=[validate_positive],
     )
+
+    def __init__(self, *args, **kwargs):
+        _data_list = kwargs.pop("data_list", None)
+        super().__init__(*args, **kwargs)
+        self.fields["place"].widget = ListTextWidget(data_list=_data_list, name="place-list")
 
     class Meta:
         model = Advert

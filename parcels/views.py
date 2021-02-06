@@ -138,7 +138,7 @@ class Index(View):
     form_class = AdvertForm
 
     def get(self, request: WSGIRequest) -> render:
-        form = self.form_class()
+        form = self.form_class(data_list=Advert.get_places())
         return render(request, "parcels/advert_form.html", {"form": form})
 
     def post(self, request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
@@ -156,7 +156,7 @@ class Index(View):
             for errors in json.loads(form.errors.as_json()).values():
                 for error in errors:
                     messages.error(request, error["message"])
-        form = AdvertForm()
+        form = self.form_class()
         return render(self.request, "parcels/advert_form.html", {"form": form})
 
 

@@ -51,7 +51,7 @@
 
             <div class="card-body">
               <h5  class="card-text">{{ advert.place }}</h5>
-              <h6  class="card-text">powiat {{ advert.county }}</h6>
+              <h6  class="card-text">{% if advert.county != 'brak danych' %}powiat {{ advert.county }}{% endif %}</h6>
               <h6  class="card-text">{{ advert.price }} PLN</h6>
               <h6  class="card-text">{{ advert.area }} m2</h6>
               <h6  class="card-text">{{ advert.price_per_m2 }} PLN/m2</h6>

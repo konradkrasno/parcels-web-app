@@ -25,9 +25,6 @@ class Advert(models.Model):
     description = models.TextField(null=True)
     image_url = models.CharField(max_length=500, null=True)
 
-    class Meta:
-        ordering = ["price"]
-
     def __repr__(self):
         return "place: {}, price: {} PLN, area: {} PLN/m2".format(
             self.place, self.price, self.area
@@ -104,16 +101,16 @@ class Advert(models.Model):
 
         adverts = cls.objects.all()
         if place != "None" and type(place) == str:
-            adverts = adverts.filter(place=place)
+            adverts = adverts.filter(place=place).order_by("price")
         if price != 0 and type(price) == int:
-            adverts = adverts.filter(price__lte=price)
+            adverts = adverts.filter(price__lte=price).order_by("price")
         if area != 0 and type(area) == int:
-            adverts = adverts.filter(area__gte=area)
+            adverts = adverts.filter(area__gte=area).order_by("price")
         return adverts
 
     @classmethod
     def get_places(cls) -> Tuple:
-        return ("Warszawa", "Halinów")
+        return tuple(set(cls.objects.only("place").values_list("place", flat=True).order_by("place")))
 
 
 class Favourite(models.Model):

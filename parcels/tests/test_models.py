@@ -28,7 +28,7 @@ class TestAdvert:
         with pytest.raises(FileNotFoundError):
             Advert.load_adverts(TEST_DIR)
 
-    def test_delete_duplicates(self, add_testing_data_to_db):
+    def test_delete_duplicates(self):
         actual_data = [obj["place"] for obj in Advert.objects.values("place")]
         expected_data = ["Dębe Wielkie", "Rysie"]
         assert actual_data == expected_data
@@ -36,7 +36,7 @@ class TestAdvert:
     def test_get_adverts_when_advert_do_not_exist(self):
         assert not Advert.get_advert(500)
 
-    def test_filter_adverts(self, add_testing_data_to_db):
+    def test_filter_adverts(self):
         assert (
             Advert.filter_adverts(place="Dębe Wielkie", price=400000, area=800).values(
                 "place"
@@ -50,6 +50,9 @@ class TestAdvert:
             )[0]["place"]
             == "Rysie"
         )
+
+    def test_get_places(self, add_testing_data_to_db):
+        assert Advert.get_places() == {"Rysie", "Dębe Wielkie"}
 
 
 @pytest.mark.django_db

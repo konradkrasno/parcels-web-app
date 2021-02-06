@@ -42,9 +42,9 @@ testing_data = [
     {
         "place": "Rysie",
         "county": "D\u0119be Wielkie",
-        "price": "175000",
-        "price_per_m2": "80",
-        "area": "2190",
+        "price": "150000",
+        "price_per_m2": "120",
+        "area": "1250",
         "link": "https://rysie.nieruchomosci-online.pl/dzialka,na-sprzedaz/20654752.html",
         "date_added": "2/10/2019",
         "description": "Do sprzedania dzia\u0142ka budowlana w pierwszej linii zabudowy po\u0142o\u017cona miejscowo\u015bci Rysie gmina D\u0119be Wielkie. Wymiary dzia\u0142ki 23mx97,6m; media pr\u0105d i wodoci\u0105g przy dzia\u0142ce. Dodatkowo na dzia\u0142ce znajduje si\u0119 domek letniskowy i blaszany gara\u017c. Dzia\u0142ka po\u0142o\u017cona w cichej i bardzo urokliwej okolicy. W pobli\u017cu las, idealne miejsce do wypoczynku. Dzia\u0142ka po\u0142o\u017cona jest zaledwie 9 km od Mi\u0144ska Mazowieckiego a do D\u0119be Wielkie 6,5km.  Zach\u0119cam do ogl\u0119dzin oraz kontaktu telefonicznego   Doradca klienta Agnieszka Ga\u0144ko tel.    Email: biuro@kwadrat-nieruchomo\u015bci.com  Oferta wys\u0142ana z programu dla biur nieruchomo\u015bci - asariWEB",

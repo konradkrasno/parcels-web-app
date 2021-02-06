@@ -38,7 +38,7 @@ class MorizonSpider(scrapy.Spider):
         data = {
             "place": response.xpath('//div[@class="col-xs-9"]/h1/strong/span[2]/text()')
             .get()
-            .split(",")[0],
+            .split(",")[0].strip(),
             "county": "".join(
                 response.xpath('//div[@class="col-xs-9"]/h1/strong/span/text()')
                 .get()
@@ -96,7 +96,7 @@ class AdresowoSpider(scrapy.Spider):
     @staticmethod
     def parse_advert_data(response):
         data = {
-            "place": response.xpath('//span[@class="offer-header__city"]/text()').get(),
+            "place": response.xpath('//span[@class="offer-header__city"]/text()').get().strip(),
             "county": "miński",
             "price": response.xpath(
                 '//div[@class="offer-summary__item offer-summary__item1"]/div/span/text()'
@@ -165,8 +165,8 @@ class StrzelczykSpider(scrapy.Spider):
         data = {
             "place": response.xpath(
                 '//li[@class="breadcrumb-item active"]/a/span/text()'
-            ).get(),
-            "county": None,
+            ).get().strip(),
+            "county": "brak danych",
             "price": response.xpath(
                 '//div[@class="col-md-3 offer--shortcut__details cena"]/span[@class="offer--shortcut__span-value"]/text()'
             )
@@ -188,7 +188,7 @@ class StrzelczykSpider(scrapy.Spider):
                 .split()
             ),
             "link": response.meta["link"],
-            "date_added": None,
+            "date_added": "brak danych",
             "description": remove_tags(
                 " ".join(
                     response.xpath('//div[@class="section__text-group"]').get().split()

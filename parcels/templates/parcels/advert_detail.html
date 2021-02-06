@@ -38,7 +38,7 @@
 			</div>
 		  </div><br>
 			<h4  class="card-text">{{ advert.place }}</h4>
-			<h5  class="card-text">powiat {{ advert.county }}</h5>
+			<h5  class="card-text">{% if advert.county != 'brak danych' %}powiat {{ advert.county }}{% endif %}</h5>
 			<table>
 				<tr>
 					<td><p class="card-text">Cena</p></td>
