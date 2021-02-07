@@ -38,5 +38,5 @@ def run_spider() -> None:
     process.start()
 
     # make post request to django service for uploading data to database
-    URL = f"http://{WEB_HOST}:8000/upload_data"
+    URL = f"http://{WEB_HOST}/upload_data"
     requests.post(URL)

@@ -52,7 +52,7 @@ def get_web_container_host() -> str:
     HOSTS_DIR = os.path.join(MAIN_DIR, "etc/hosts")
     try:
         with open(HOSTS_DIR) as f:
-            host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + "1"
+            host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + "1" + ":8000"
     except FileNotFoundError:
-        host = "127.0.0.1"
+        host = "127.0.0.1:8000"
     return host
