@@ -30,7 +30,7 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG")
+DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -163,8 +163,8 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Celery Configuration Options
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_BROKER_URL = os.environ.get("REDIS_URL")
+CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
 CELERY_BEAT_SCHEDULE = {
     'scraper': {
         'task': 'parcels.tasks.run_spider',
