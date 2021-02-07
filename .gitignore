@@ -13,3 +13,4 @@ db.sqlite3
 todo.txt
 .coverage
 htmlcov
+celerybeat-schedule
