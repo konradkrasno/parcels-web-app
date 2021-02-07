@@ -14,6 +14,9 @@ from adverts_crawler.adverts_crawler.spiders.scraper import (
     StrzelczykSpider,
 )
 from parcels_web_app.settings import SCRAPED_DATA_CATALOG
+from parcels.models import Advert
+from django.db.utils import ProgrammingError
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -41,9 +44,17 @@ def run_spider(spider_name: str) -> None:
     elif spider_name == "strzelczyk":
         process.crawl(StrzelczykSpider)
     process.start()
-
     logging.info("Data scraped successfully")
 
-    # # make post request to django service for uploading data to database
-    # URL = f"http://{WEB_HOST}/upload_data"
-    # requests.post(URL)
+    # upload data to db
+    upload_data()
+
+
+@shared_task
+def upload_data() -> None:
+    try:
+        Advert.load_adverts(SCRAPED_DATA_CATALOG)
+    except (ProgrammingError, FileNotFoundError) as e:
+        logging.error(f"ERROR: {e.__str__()}")
+    Advert.delete_duplicates()
+    logging.info("Data successfully updated.")

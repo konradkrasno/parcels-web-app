@@ -48,18 +48,9 @@ def run_spider(request: WSGIRequest, spider_name: str) -> JsonResponse:
     return JsonResponse({"OK": "Spider run successfully"})
 
 
-class UploadData(View):
-    """ Uploading data from json file to database. """
-
-    @staticmethod
-    def post(request: WSGIRequest) -> JsonResponse:
-        try:
-            Advert.load_adverts(SCRAPED_DATA_CATALOG)
-        except (ProgrammingError, FileNotFoundError) as e:
-            logging.error(e.__str__())
-            return JsonResponse({"ERROR": e.__str__()})
-        Advert.delete_duplicates()
-        return JsonResponse({"OK": "Data successfully updated."})
+def upload_data(request: WSGIRequest) -> JsonResponse:
+    tasks.upload_data.delay()
+    return JsonResponse({"OK": "Task for uploading data pushed."})
 
 
 def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
