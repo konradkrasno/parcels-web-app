@@ -7,7 +7,7 @@ app_name = "parcels"
 
 urlpatterns = [
     path("", views.Index.as_view(), name="index"),
-    path("run_spider", views.run_spider, name="run_spider"),
+    path("run_spider/<str:spider_name>", views.run_spider, name="run_spider"),
     path(
         "upload_data",
         csrf_exempt(views.UploadData.as_view()),

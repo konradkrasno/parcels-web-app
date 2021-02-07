@@ -148,7 +148,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATIC_URL = "/static/"
 
 LOGIN_URL = "user_login"
@@ -167,9 +167,20 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 CELERY_BROKER_URL = os.environ.get("REDIS_URL")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
 CELERY_BEAT_SCHEDULE = {
-    'scraper': {
-        'task': 'parcels.tasks.run_spider',
-        'schedule': timedelta(days=7),
+    "crawl_morizon": {
+        "task": "parcels.tasks.run_spider",
+        "schedule": timedelta(days=7),
+        "args": ("morizon",),
+    },
+    "crawl_adresowo": {
+        "task": "parcels.tasks.run_spider",
+        "schedule": timedelta(days=7),
+        "args": ("adresowo",),
+    },
+    "crawl_strzelczyk": {
+        "task": "parcels.tasks.run_spider",
+        "schedule": timedelta(days=7),
+        "args": ("strzelczyk",),
     },
 }
 

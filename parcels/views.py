@@ -43,8 +43,8 @@ def error_500(request, exception=None):
     return render(request, "errors/500.html", locals())
 
 
-def run_spider(request: WSGIRequest) -> JsonResponse:
-    tasks.run_spider.delay()
+def run_spider(request: WSGIRequest, spider_name: str) -> JsonResponse:
+    tasks.run_spider.delay(spider_name)
     return JsonResponse({"OK": "Spider run successfully"})
 
 
