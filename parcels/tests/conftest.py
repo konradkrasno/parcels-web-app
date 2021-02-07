@@ -29,7 +29,7 @@ def create_test_csv():
         "link",
         "date_added",
         "description",
-        "image_url"
+        "image_url",
     ]
     rows = [item.values() for item in testing_data]
     df = pd.DataFrame(rows, columns=header)

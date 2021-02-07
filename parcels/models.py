@@ -57,7 +57,7 @@ class Advert(models.Model):
         :param catalog: Catalog name with files to be added.
         """
 
-        path = os.path.join(os.getcwd(), catalog, "*.csv")
+        path = os.path.join(catalog, "*.csv")
         files = glob.glob(path)
 
         if files:
@@ -110,7 +110,13 @@ class Advert(models.Model):
 
     @classmethod
     def get_places(cls) -> Tuple:
-        return tuple(set(cls.objects.only("place").values_list("place", flat=True).order_by("place")))
+        return tuple(
+            set(
+                cls.objects.only("place")
+                .values_list("place", flat=True)
+                .order_by("place")
+            )
+        )
 
 
 class Favourite(models.Model):
