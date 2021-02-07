@@ -14,9 +14,7 @@ class TestForms:
         assert form.is_valid()
 
     def test_advert_form_when_invalid(self):
-        form = AdvertForm({
-            "price": -100
-        })
+        form = AdvertForm({"price": -100})
         assert not form.is_valid()
 
     def test_sign_up_form_when_valid(self):

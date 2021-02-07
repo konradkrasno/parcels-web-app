@@ -1,3 +1,5 @@
+import os
+import re
 from typing import *
 
 from django.db.models import QuerySet
@@ -35,3 +37,22 @@ def prepare_csv(adverts: QuerySet) -> List:
         ]
         rows.append(row)
     return rows
+
+
+def get_web_container_host() -> str:
+    MAIN_DIR = os.path.dirname(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(
+                    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                )
+            )
+        )
+    )
+    HOSTS_DIR = os.path.join(MAIN_DIR, "etc/hosts")
+    try:
+        with open(HOSTS_DIR) as f:
+            host = re.match(r"([0-9]*(\.))*", list(f).pop()).group() + "1"
+    except FileNotFoundError:
+        host = "127.0.0.1"
+    return host

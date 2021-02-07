@@ -22,7 +22,7 @@ class AdvertForm(forms.Form):
     )
     area = forms.IntegerField(
         label="Powierzchnia",
-        help_text="Podaj minimalną powierzchnię",
+        help_text="Podaj minimalną powierzchnię w metrach kwadratowych",
         required=False,
         validators=[validate_positive],
     )
@@ -30,7 +30,9 @@ class AdvertForm(forms.Form):
     def __init__(self, *args, **kwargs):
         _data_list = kwargs.pop("data_list", None)
         super().__init__(*args, **kwargs)
-        self.fields["place"].widget = ListTextWidget(data_list=_data_list, name="place-list")
+        self.fields["place"].widget = ListTextWidget(
+            data_list=_data_list, name="place-list"
+        )
 
     class Meta:
         model = Advert

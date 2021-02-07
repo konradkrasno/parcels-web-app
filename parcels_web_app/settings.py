@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
+
 from dotenv import load_dotenv
+
+from parcels.helpers import get_web_container_host
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -94,10 +98,8 @@ CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": "redis://redis:6379",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient"
-        },
-        "KEY_PREFIX": "parcels"
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": "parcels",
     }
 }
 
@@ -161,5 +163,19 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Celery Configuration Options
-CELERY_BROKER_URL  = "redis://redis:6379"
+CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_BEAT_SCHEDULE = {
+    'scraper': {
+        'task': 'parcels.tasks.run_spider',
+        'schedule': timedelta(days=7),
+    },
+}
+
+# Scrapy Configuration Options
+SCRAPED_DATA_CATALOG = os.path.join(BASE_DIR, "scraped_data")
+
+if DEBUG:
+    WEB_HOST = get_web_container_host()
+else:
+    WEB_HOST = os.environ.get("WEB_HOST")

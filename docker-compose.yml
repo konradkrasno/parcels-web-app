@@ -19,6 +19,7 @@ services:
       POSTGRES_PASSWORD: password
 
   web:
+    hostname: parcels_web_app
     build:
       context: .
       dockerfile: Dockerfile
@@ -50,3 +51,19 @@ services:
       - .:/usr/src/app
     working_dir: /usr/src/app
     command: celery -A parcels_web_app worker -l info
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: beat
+    links:
+      - postgres
+      - redis
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/usr/src/app
+    working_dir: /usr/src/app
+    command: celery -A parcels_web_app beat -l info

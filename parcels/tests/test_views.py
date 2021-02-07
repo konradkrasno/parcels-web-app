@@ -6,11 +6,9 @@ from django.shortcuts import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
+from parcels import tasks
 from parcels import views
 from parcels.models import Advert, Favourite
-from parcels.tests.conftest import (
-    TEST_DIR,
-)
 from parcels.tokens import account_activation_token
 
 
@@ -20,46 +18,28 @@ class TestViews:
 
     pytestmark = pytest.mark.django_db
 
-    def test_upload_data_when_success(self, create_test_csv, client, mocker):
+    def test_upload_data(self, create_test_csv, client, mocker):
+        mocker.patch("parcels.models.Advert.load_adverts")
         mocker.patch("parcels.models.Advert.delete_duplicates")
 
-        response = client.post(
-            reverse("parcels:upload_data", kwargs={"catalog": TEST_DIR})
-        )
+        response = client.post(reverse("parcels:upload_data"))
 
         assert response.status_code == 200
-        assert Advert.objects.exists()
+        Advert.load_adverts.assert_called_once()
         Advert.delete_duplicates.assert_called_once()
 
-    def test_upload_data_when_no_files(self, client, mocker):
-        mocker.patch("parcels.models.Advert.delete_duplicates")
-
-        response = client.post(
-            reverse("parcels:upload_data", kwargs={"catalog": "nonexistent"})
-        )
-
-        assert response.status_code == 200
-        Advert.delete_duplicates.assert_not_called()
-
     def test_index_get(self, client):
-        response = client.get(
-            reverse("parcels:index")
-        )
+        response = client.get(reverse("parcels:index"))
         assert response.status_code == 200
 
     def test_index_post(self, factory):
-        request = factory.post(
-            reverse("parcels:index"),
-            data={}
-        )
+        request = factory.post(reverse("parcels:index"), data={})
         request.user = AnonymousUser()
         response = views.Index().post(request=request)
         assert response.status_code == 302
         assert "?place=None&price=0&area=0" in response.url
 
-    def test_advert_list_view_with_unlogged_user(
-        self, client
-    ):
+    def test_advert_list_view_with_unlogged_user(self, client):
         kwargs = {
             "place": "Dębe Wielkie",
             "price": 400000,
@@ -72,9 +52,7 @@ class TestViews:
         for key in ["place", "price", "area"]:
             assert context.get(key) == str(kwargs.get(key))
 
-    def test_advert_list_view_with_logged_user(
-        self, user, client
-    ):
+    def test_advert_list_view_with_logged_user(self, user, client):
         kwargs = {
             "place": "Dębe Wielkie",
             "price": 400000,
@@ -92,16 +70,16 @@ class TestViews:
         for key in ["place", "price", "area"]:
             assert context.get(key) == str(kwargs.get(key))
 
-    def test_advert_detail_view(
-        self, client
-    ):
+    def test_advert_detail_view(self, client):
         kwargs = {
             "place": "Dębe Wielkie",
             "price": 400000,
             "area": 800,
         }
         pk = Advert.filter_adverts(**kwargs)[0].id
-        response = client.get(reverse("parcels:advert_detail", kwargs={"pk": pk}), kwargs)
+        response = client.get(
+            reverse("parcels:advert_detail", kwargs={"pk": pk}), kwargs
+        )
         context = response.context_data
         query = context["object"]
 
@@ -109,16 +87,19 @@ class TestViews:
         for key in ["place", "price", "area"]:
             assert context.get(key) == str(kwargs.get(key))
 
-    def test_favourite_list_view(
-        self, test_adverts, add_favourites, user, client
-    ):
+    def test_favourite_list_view(self, test_adverts, add_favourites, user, client):
         response = client.get(reverse("parcels:favourite_list"))
         context = response.context_data
         query = context["object_list"]
 
-        assert list(query.values_list("place")) == [("Dębe Wielkie",), ("Rysie",), ("Rysie",)]
+        assert list(query.values_list("place")) == [
+            ("Dębe Wielkie",),
+            ("Rysie",),
+            ("Rysie",),
+        ]
 
-    def test_register_when_valid_form(self, client):
+    def test_register_when_valid_form(self, client, mocker):
+        mocker.patch("parcels.tasks.send_email.delay")
         valid_data = {
             "username": "test_user",
             "password1": "secret132",
@@ -132,10 +113,10 @@ class TestViews:
         assert response.status_code == 302
         assert User.objects.values("username")[0]["username"] == "test_user"
         assert User.objects.values("email")[0]["email"] == "test@gmail.com"
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].subject == "Aktywacja konta w aplikacji ParcelsScraper"
+        tasks.send_email.delay.assert_called_once()
 
-    def test_register_when_invalid_form(self, client):
+    def test_register_when_invalid_form(self, client, mocker):
+        mocker.patch("parcels.tasks.send_email.delay")
         valid_data = {
             "username": "test_user",
             "password1": "password",
@@ -148,7 +129,7 @@ class TestViews:
 
         assert response.status_code == 200
         assert not User.objects.exists()
-        assert len(mail.outbox) == 0
+        tasks.send_email.delay.assert_not_called()
 
     def test_activate(self, client):
         user = User.objects.create(username="test_user", email="test@gmail.com")
@@ -193,32 +174,39 @@ class TestViews:
         pk = Advert.objects.get(place="Dębe Wielkie").id
         response = client.post(
             reverse("parcels:save_advert", kwargs={"pk": pk}),
-            HTTP_REFERER='http://foo/bar'
+            HTTP_REFERER="http://foo/bar",
         )
         assert response.status_code == 302
-        assert list(Favourite.get_favourites(user.id).values_list("place")) == [("Dębe Wielkie",)]
+        assert list(Favourite.get_favourites(user.id).values_list("place")) == [
+            ("Dębe Wielkie",)
+        ]
 
     def test_delete_advert(self, user, client, add_favourites):
         pk = Advert.objects.get(place="Dębe Wielkie").id
         response = client.post(
             reverse("parcels:delete_advert", kwargs={"pk": pk}),
-            HTTP_REFERER='http://foo/bar'
+            HTTP_REFERER="http://foo/bar",
         )
         assert response.status_code == 302
-        assert list(Favourite.get_favourites(user.id).values_list("place")) == [("Rysie",), ("Rysie",)]
+        assert list(Favourite.get_favourites(user.id).values_list("place")) == [
+            ("Rysie",),
+            ("Rysie",),
+        ]
 
     def test_save_all_adverts(self, user, client):
         response = client.post(
-            reverse("parcels:save_all_adverts"),
-            HTTP_REFERER='http://foo/bar'
+            reverse("parcels:save_all_adverts"), HTTP_REFERER="http://foo/bar"
         )
         assert response.status_code == 302
-        assert list(Favourite.get_favourites(user.id).values_list("place")) == [("Dębe Wielkie",), ("Rysie",), ("Rysie",)]
+        assert list(Favourite.get_favourites(user.id).values_list("place")) == [
+            ("Dębe Wielkie",),
+            ("Rysie",),
+            ("Rysie",),
+        ]
 
     def test_delete_all_adverts(self, user, client, add_favourites):
         response = client.post(
-            reverse("parcels:delete_all_adverts"),
-            HTTP_REFERER='http://foo/bar'
+            reverse("parcels:delete_all_adverts"), HTTP_REFERER="http://foo/bar"
         )
         assert response.status_code == 302
         assert list(Favourite.get_favourites(user.id).values_list("place")) == []
@@ -232,16 +220,11 @@ class TestViews:
             == '''attachment; filename="your_adverts.csv"'''
         )
 
-    def test_sending_csv(self, add_favourites, user, client):
+    def test_sending_csv(self, add_favourites, user, client, mocker):
+        mocker.patch("parcels.tasks.send_email.delay")
         response = client.post(
-            reverse("parcels:send_csv"),
-            HTTP_REFERER='http://foo/bar'
+            reverse("parcels:send_csv"), HTTP_REFERER="http://foo/bar"
         )
 
         assert response.status_code == 302
-        assert len(mail.outbox) == 1
-        assert mail.outbox[0].subject == "ParcelsScraper - wybrane działki"
-        assert (
-            mail.outbox[0].body
-            == "W załączeniu przesyłamy wybrane przez Ciebie działki."
-        )
+        tasks.send_email.delay.assert_called_once()

@@ -24,6 +24,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import View, ListView, DetailView
 
+from parcels_web_app.settings import SCRAPED_DATA_CATALOG, WEB_HOST
+from . import tasks
 from .forms import AdvertForm, SignUpForm, LoginForm
 from .helpers import prepare_csv, Echo
 from .models import Advert, Favourite
@@ -41,16 +43,21 @@ def error_500(request, exception=None):
     return render(request, "errors/500.html", locals())
 
 
+def run_spider(request: WSGIRequest) -> JsonResponse:
+    tasks.run_spider.delay()
+    return JsonResponse({"OK": "Spider run successfully"})
+
+
 class UploadData(View):
     """ Uploading data from json file to database. """
 
     @staticmethod
-    def post(request: WSGIRequest, catalog: str) -> JsonResponse:
+    def post(request: WSGIRequest) -> JsonResponse:
         try:
-            Advert.load_adverts(catalog)
+            Advert.load_adverts(SCRAPED_DATA_CATALOG)
         except (ProgrammingError, FileNotFoundError) as e:
             logging.error(e.__str__())
-            return JsonResponse({"OK": e.__str__()})
+            return JsonResponse({"ERROR": e.__str__()})
         Advert.delete_duplicates()
         return JsonResponse({"OK": "Data successfully updated."})
 
@@ -75,11 +82,7 @@ def register(request: WSGIRequest) -> Union[HttpResponseRedirect, render]:
                 },
             )
             recipient = form.cleaned_data.get("email1")
-            send_email.delay(
-                subject=mail_subject,
-                body=message,
-                to=[recipient]
-            )
+            send_email.delay(subject=mail_subject, body=message, to=[recipient])
             messages.success(
                 request, "Potwierdź adres email, aby dokończyć rejestrację."
             )
@@ -151,7 +154,7 @@ class Index(View):
                 request.session.update(form.cleaned_data)
             return HttpResponseRedirect(
                 "{}?place={place}&price={price}&area={area}".format(
-                    reverse('parcels:advert_list'),
+                    reverse("parcels:advert_list"),
                     **form.cleaned_data,
                 )
             )
@@ -241,7 +244,7 @@ def delete_advert(request: WSGIRequest, pk: int) -> HttpResponseRedirect:
     Favourite.remove_from_favourite(user_id=request.user.id, adverts=advert)
     next_url = request.session.get("next_url", None)
     view_name = request.session.get("view_name")
-    if next_url is None or view_name == 'adverts':
+    if next_url is None or view_name == "adverts":
         next_url = request.META["HTTP_REFERER"]
     return HttpResponseRedirect(next_url)
 
