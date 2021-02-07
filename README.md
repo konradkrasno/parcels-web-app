@@ -1,4 +1,5 @@
 # parcels-web-app
+![Alt text](./coverage.svg)
 
 This is django web application with which you can look for building plots advertisements and find the most attractive one.
 
@@ -13,34 +14,43 @@ Application have features such us:
 * downloading csv file with favourite adverts
 * sending email with csv file with favourite adverts
 
-### Working of application
+##### TODO
+- [ ] searching adverts by description
 
-Application consists of four services:
-* django - handles business logic
-* postgres - the database service
-* crawler - service for scraping data from sites with advertisements and load scraped data to postres database
- via Django API
-* task-manager - runs clawler in scheduled time
+### Dependencies
+* Django
+* PostresSQL
+* Scrapy
+* Celery
 
-### Example View
-![favourites_page](https://user-images.githubusercontent.com/55924004/93318427-fa40c200-f80e-11ea-9af1-5c6d8a0c90d9.PNG)
+### Example Views
+![index](https://user-images.githubusercontent.com/55924004/107148748-35c26100-6955-11eb-8253-ed624f793f78.png)
 
-### Installation
+![advert_list](https://user-images.githubusercontent.com/55924004/107148752-38bd5180-6955-11eb-9de9-07d701761c9f.png)
+
+
+### Running on development server
 
 Clone the repository:
 ```bash
 git clone https://github.com/konradkrasno/parcels-web-app.git
 cd parcels-web-app
 ```
-To run the application and enjoy all features you have to create json file with django secret key and information about email account which you will use to send messages to users. Name it secure.json:
+Add .env:
 ```
-parcels-web-app/secure.json
+parcels-web-app/.env
 {
- "SECRET_KEY": "django_server_key",
- "EMAIL_HOST": "your_email_host", 
- "EMAIL_HOST_USER": "your_email_address", 
- "EMAIL_HOST_PASSWORD": "your_email_password", 
- "EMAIL_PORT": "your_email_port"
+    SECRET_KEY=<your-secret-key>
+    EMAIL_HOST=<your-email-host>
+    EMAIL_USERNAME=<your-email-username>
+    EMAIL_PASSWORD=<your-email-password>
+    EMAIL_PORT=<your-email-port>
+    DATABASE_NAME=<datababase-name>
+    DATABASE_USER=<datababase-user>
+    DATABASE_PASSWORD=<datababase-password>
+    DATABASE_HOST=<datababase-host>
+    REDIS_URL=<redis-url>
+    DEBUG=1
 }
 ```
 
@@ -49,15 +59,9 @@ Initialize docker containers:
 docker-compose up -d
 ```
 
-Get inside Django container to make migrations and run tests:
-```bash
-docker exec -it <django-container-name> bash
-python3 parcels-web-app/manage.py makemigrations parcels
-python3 parcels-web-app/manage.py migrate
-```
-
-To run unit tests write in command prompt:
+Running tests:
 
 ```bash
-pytest -v parcels-web-app/parcels/tests
+docker exec -it web bash
+pytest
 ```
