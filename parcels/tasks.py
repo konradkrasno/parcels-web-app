@@ -36,14 +36,18 @@ def run_spider(spider_name: str) -> None:
     s = get_project_settings()
     s["FEED_FORMAT"] = "csv"
     s["FEED_URI"] = f"{SCRAPED_DATA_CATALOG}/adverts.csv"
-    process = CrawlerProcess(s)
-    if spider_name == "morizon":
-        process.crawl(MorizonSpider)
-    elif spider_name == "adresowo":
-        process.crawl(AdresowoSpider)
-    elif spider_name == "strzelczyk":
-        process.crawl(StrzelczykSpider)
-    process.start()
+
+    def search(runner, spider_name):
+        if spider_name == "morizon":
+            return runner.crawl(MorizonSpider)
+        elif spider_name == "adresowo":
+            return runner.crawl(AdresowoSpider)
+        elif spider_name == "strzelczyk":
+            return runner.crawl(StrzelczykSpider)
+
+    runner = CrawlerProcess()
+    search(runner, spider_name)
+    runner.start()
     logging.info("Data scraped successfully")
 
     # upload data to db
