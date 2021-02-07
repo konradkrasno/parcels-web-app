@@ -11,12 +11,10 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
-import django_heroku
 from datetime import timedelta
 
+import django_heroku
 from dotenv import load_dotenv
-
-from parcels.helpers import get_web_container_host
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -156,10 +154,10 @@ LOGIN_REDIRECT_URL = "/"
 
 EMAIL_USE_SSL = True
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = os.environ.get("EMAIL_USERNAME")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
-DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
+DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_USERNAME")
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
@@ -186,10 +184,5 @@ CELERY_BEAT_SCHEDULE = {
 
 # Scrapy Configuration Options
 SCRAPED_DATA_CATALOG = os.path.join(BASE_DIR, "scraped_data")
-
-if DEBUG:
-    WEB_HOST = get_web_container_host()
-else:
-    WEB_HOST = os.environ.get("WEB_HOST")
 
 django_heroku.settings(locals())

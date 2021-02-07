@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.handlers.wsgi import WSGIRequest
 from django.db.models import QuerySet
-from django.db.utils import ProgrammingError
 from django.http import (
     HttpResponseRedirect,
     StreamingHttpResponse,
@@ -24,7 +23,6 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.generic import View, ListView, DetailView
 
-from parcels_web_app.settings import SCRAPED_DATA_CATALOG, WEB_HOST
 from . import tasks
 from .forms import AdvertForm, SignUpForm, LoginForm
 from .helpers import prepare_csv, Echo

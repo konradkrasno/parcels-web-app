@@ -5,6 +5,7 @@ from typing import *
 
 from celery import shared_task
 from django.core.mail import EmailMessage
+from django.db.utils import ProgrammingError
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
@@ -13,10 +14,8 @@ from adverts_crawler.adverts_crawler.spiders.scraper import (
     AdresowoSpider,
     StrzelczykSpider,
 )
-from parcels_web_app.settings import SCRAPED_DATA_CATALOG
 from parcels.models import Advert
-from django.db.utils import ProgrammingError
-
+from parcels_web_app.settings import SCRAPED_DATA_CATALOG
 
 logging.basicConfig(level=logging.DEBUG)
 

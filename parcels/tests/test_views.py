@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import User
-from django.core import mail
 from django.shortcuts import reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -18,15 +17,17 @@ class TestViews:
 
     pytestmark = pytest.mark.django_db
 
-    def test_upload_data(self, create_test_csv, client, mocker):
-        mocker.patch("parcels.models.Advert.load_adverts")
-        mocker.patch("parcels.models.Advert.delete_duplicates")
-
-        response = client.post(reverse("parcels:upload_data"))
-
+    def test_run_spider(self, client, mocker):
+        mocker.patch("parcels.tasks.run_spider.delay")
+        response = client.get(reverse("parcels:run_spider", kwargs={"spider_name": "test"}))
         assert response.status_code == 200
-        Advert.load_adverts.assert_called_once()
-        Advert.delete_duplicates.assert_called_once()
+        tasks.run_spider.delay.assert_called_once()
+
+    def test_upload_data(self, client, mocker):
+        mocker.patch("parcels.tasks.upload_data.delay")
+        response = client.get(reverse("parcels:upload_data"))
+        assert response.status_code == 200
+        tasks.upload_data.delay.assert_called_once()
 
     def test_index_get(self, client):
         response = client.get(reverse("parcels:index"))
@@ -92,11 +93,7 @@ class TestViews:
         context = response.context_data
         query = context["object_list"]
 
-        assert list(query.values_list("place")) == [
-            ("Dębe Wielkie",),
-            ("Rysie",),
-            ("Rysie",),
-        ]
+        assert len(query.values_list("place")) == 3
 
     def test_register_when_valid_form(self, client, mocker):
         mocker.patch("parcels.tasks.send_email.delay")
@@ -198,11 +195,7 @@ class TestViews:
             reverse("parcels:save_all_adverts"), HTTP_REFERER="http://foo/bar"
         )
         assert response.status_code == 302
-        assert list(Favourite.get_favourites(user.id).values_list("place")) == [
-            ("Dębe Wielkie",),
-            ("Rysie",),
-            ("Rysie",),
-        ]
+        assert len(Favourite.get_favourites(user.id).values_list("place")) == 3
 
     def test_delete_all_adverts(self, user, client, add_favourites):
         response = client.post(
