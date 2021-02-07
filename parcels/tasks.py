@@ -1,8 +1,8 @@
 import glob
+import logging
 import os
 from typing import *
 
-import requests
 from celery import shared_task
 from django.core.mail import EmailMessage
 from scrapy.crawler import CrawlerProcess
@@ -13,7 +13,9 @@ from adverts_crawler.adverts_crawler.spiders.scraper import (
     AdresowoSpider,
     StrzelczykSpider,
 )
-from parcels_web_app.settings import SCRAPED_DATA_CATALOG, WEB_HOST
+from parcels_web_app.settings import SCRAPED_DATA_CATALOG
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 @shared_task
@@ -40,6 +42,8 @@ def run_spider(spider_name: str) -> None:
         process.crawl(StrzelczykSpider)
     process.start()
 
-    # make post request to django service for uploading data to database
-    URL = f"http://{WEB_HOST}/upload_data"
-    requests.post(URL)
+    logging.info("Data scraped successfully")
+
+    # # make post request to django service for uploading data to database
+    # URL = f"http://{WEB_HOST}/upload_data"
+    # requests.post(URL)
