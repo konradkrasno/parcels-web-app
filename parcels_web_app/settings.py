@@ -165,24 +165,15 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 CELERY_BROKER_URL = os.environ.get("REDIS_URL")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL")
 CELERY_BEAT_SCHEDULE = {
-    "crawl_morizon": {
+    "spider": {
         "task": "parcels.tasks.run_spider",
         "schedule": timedelta(days=7),
-        "args": ("morizon",),
-    },
-    "crawl_adresowo": {
-        "task": "parcels.tasks.run_spider",
-        "schedule": timedelta(days=7),
-        "args": ("adresowo",),
-    },
-    "crawl_strzelczyk": {
-        "task": "parcels.tasks.run_spider",
-        "schedule": timedelta(days=7),
-        "args": ("strzelczyk",),
     },
 }
 
 # Scrapy Configuration Options
 SCRAPED_DATA_CATALOG = os.path.join(BASE_DIR, "scraped_data")
 
-django_heroku.settings(locals())
+# Heroku Configuration Options
+if not DEBUG:
+    django_heroku.settings(locals())

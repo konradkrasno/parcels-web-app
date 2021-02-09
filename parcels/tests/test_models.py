@@ -45,11 +45,15 @@ class TestAdvert:
         )
 
         assert (
-            Advert.filter_adverts(place="Rysie", price=200000, area=1000).values(
+            Advert.filter_adverts(place="None", price=200000, area=1000).values(
                 "place"
             )[0]["place"]
             == "Rysie"
         )
+
+    def test_search_text(self):
+        adverts = Advert.objects.all()
+        assert Advert.search_by_description(adverts, "media przy działce")
 
     def test_get_places(self):
         assert len(Advert.get_places()) == 2

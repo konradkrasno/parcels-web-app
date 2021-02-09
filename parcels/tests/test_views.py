@@ -19,7 +19,7 @@ class TestViews:
 
     def test_run_spider(self, client, mocker):
         mocker.patch("parcels.tasks.run_spider.delay")
-        response = client.get(reverse("parcels:run_spider", kwargs={"spider_name": "test"}))
+        response = client.get(reverse("parcels:run_spider"))
         assert response.status_code == 200
         tasks.run_spider.delay.assert_called_once()
 
@@ -40,7 +40,7 @@ class TestViews:
         assert response.status_code == 302
         assert "?place=None&price=0&area=0" in response.url
 
-    def test_advert_list_view_with_unlogged_user(self, client):
+    def test_advert_list_view(self, client):
         kwargs = {
             "place": "Dębe Wielkie",
             "price": 400000,
@@ -53,23 +53,20 @@ class TestViews:
         for key in ["place", "price", "area"]:
             assert context.get(key) == str(kwargs.get(key))
 
-    def test_advert_list_view_with_logged_user(self, user, client):
+    def test_advert_list_view_post(self, client, mocker):
         kwargs = {
-            "place": "Dębe Wielkie",
-            "price": 400000,
-            "area": 800,
+            "place": None,
+            "price": 0,
+            "area": 0,
         }
-        # adding query data to request.session
-        session = client.session
-        session.update(kwargs)
-        session.save()
-
-        response = client.get(reverse("parcels:advert_list"), kwargs)
-        context = response.context_data
-        query = context["object_list"]
-        assert list(query.values_list("place")) == [("Dębe Wielkie",)]
-        for key in ["place", "price", "area"]:
-            assert context.get(key) == str(kwargs.get(key))
+        response = client.post(
+            "{}?place={place}&price={price}&area={area}".format(
+                reverse("parcels:advert_list"),
+                **kwargs,
+            )
+        )
+        assert response.status_code == 302
+        assert "?place=None&price=0&area=0&search_text=None" in response.url
 
     def test_advert_detail_view(self, client):
         kwargs = {
@@ -92,8 +89,12 @@ class TestViews:
         response = client.get(reverse("parcels:favourite_list"))
         context = response.context_data
         query = context["object_list"]
-
         assert len(query.values_list("place")) == 3
+
+    def test_favourite_list_view_post(self, user, client):
+        response = client.post(reverse("parcels:favourite_list"))
+        assert response.status_code == 302
+        assert "?search_text=None" in response.url
 
     def test_register_when_valid_form(self, client, mocker):
         mocker.patch("parcels.tasks.send_email.delay")

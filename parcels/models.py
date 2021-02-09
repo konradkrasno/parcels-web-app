@@ -5,6 +5,7 @@ from typing import *
 
 import pandas as pd
 from django.contrib.auth.models import User
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 from django.db import models, transaction
 from django.db.models import QuerySet
 from django.db.utils import ProgrammingError
@@ -95,17 +96,46 @@ class Advert(models.Model):
     def get_advert(cls, _id: int):
         return cls.objects.filter(id=_id)
 
+    @staticmethod
+    def convert_input(value: Any, to_type: Any) -> Any:
+        try:
+            return to_type(value)
+        except ValueError:
+            return None
+
     @classmethod
-    def filter_adverts(cls, place: str, price: int, area: int) -> QuerySet:
+    def filter_adverts(
+        cls,
+        place: str,
+        price: Union[str, int],
+        area: Union[str, int],
+        search_text: str = None,
+    ) -> QuerySet:
         """ Returns objects filtered by place, price and area ordered by price. """
 
+        price = cls.convert_input(price, int)
+        area = cls.convert_input(area, int)
+
         adverts = cls.objects.all().order_by("price")
-        if place != "None" and type(place) == str:
+        if place and place != "None":
             adverts = adverts.filter(place=place).order_by("price")
-        if price != 0 and type(price) == int:
+        if price and price != 0:
             adverts = adverts.filter(price__lte=price).order_by("price")
-        if area != 0 and type(area) == int:
+        if area and area != 0:
             adverts = adverts.filter(area__gte=area).order_by("price")
+        adverts = cls.search_by_description(adverts, search_text)
+        return adverts
+
+    @staticmethod
+    def search_by_description(adverts: QuerySet, search_text: str) -> QuerySet:
+        if search_text and search_text != "None":
+            vector = SearchVector("description")
+            query = SearchQuery(search_text)
+            adverts = (
+                adverts.annotate(search=vector, rank=SearchRank(vector, query))
+                .filter(search=search_text)
+                .order_by("-rank")
+            )
         return adverts
 
     @classmethod
@@ -171,10 +201,11 @@ class Favourite(models.Model):
             [fav.adverts.remove(advert) for advert in adverts]
 
     @classmethod
-    def get_favourites(cls, user_id: int) -> QuerySet:
+    def get_favourites(cls, user_id: int, search_text: str = None) -> QuerySet:
         """ Returns a list of user's favourites adverts. """
 
         try:
-            return cls.objects.get(user__id=user_id).adverts.all()
+            adverts = cls.objects.get(user__id=user_id).adverts.all()
         except cls.DoesNotExist:
             return cls.objects.none()
+        return Advert.search_by_description(adverts, search_text)
