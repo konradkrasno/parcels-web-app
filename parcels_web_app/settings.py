@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 from datetime import timedelta
 
-import django_heroku
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -173,7 +172,3 @@ CELERY_BEAT_SCHEDULE = {
 
 # Scrapy Configuration Options
 SCRAPED_DATA_CATALOG = os.path.join(BASE_DIR, "scraped_data")
-
-# Heroku Configuration Options
-if not DEBUG:
-    django_heroku.settings(locals())
