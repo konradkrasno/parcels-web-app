@@ -12,9 +12,9 @@
 			<div class="btn-group">
 			  <button type="button" class="btn btn-sm btn-outline-secondary">
 			  {% if request.session.view_name == 'favourites' %}
-				<a class="btn btn-sm" href="{% url 'parcels:favourite_list' %}?page={{ page }}">Powrót</a>
+				<a class="btn btn-sm" href="{% url 'parcels:favourite_list' %}?search_text={{ search_text }}&page={{ page }}">Powrót</a>
 			  {% else %}
-				<a class="btn btn-sm" href="{% url 'parcels:advert_list' %}?place={{ place }}&price={{ price }}&area={{ area }}&page={{ page }}">Powrót</a>
+				<a class="btn btn-sm" href="{% url 'parcels:advert_list' %}?place={{ place }}&price={{ price }}&area={{ area }}&search_text={{ search_text }}&page={{ page }}">Powrót</a>
 			  {% endif %}
 			  </button>
 

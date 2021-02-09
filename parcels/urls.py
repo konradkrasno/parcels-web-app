@@ -6,7 +6,7 @@ app_name = "parcels"
 
 urlpatterns = [
     path("", views.Index.as_view(), name="index"),
-    path("run_spider/<str:spider_name>", views.run_spider, name="run_spider"),
+    path("run_spider", views.run_spider, name="run_spider"),
     path("upload_data", views.upload_data, name="upload_data"),
     path("register", views.register, name="register"),
     path("activate/<str:uidb64>/<str:token>", views.activate, name="activate"),

@@ -75,3 +75,11 @@ class LoginForm(forms.Form):
     class Meta:
         model = get_user_model()
         fields = ("username",)
+
+
+class SearchForm(forms.Form):
+    search_text = forms.CharField(
+        max_length=250,
+        help_text="Podaj frazę, którą chcesz wyszukać w opisie ogłoszenia",
+        label=False,
+    )

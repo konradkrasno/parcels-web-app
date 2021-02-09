@@ -11,11 +11,9 @@ Data is automatically scraped and loaded to database.
 
 Application have features such us:
 * saving filtered adverts
+* searching adverts by description
 * downloading csv file with favourite adverts
-* sending email with csv file with favourite adverts
-
-##### TODO
-- [ ] searching adverts by description
+* sending email with csv file with saved adverts
 
 ### Dependencies
 * Django
